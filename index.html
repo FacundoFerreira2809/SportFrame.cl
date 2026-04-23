@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SportFrame — Donde el deporte se ve diferente</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=Outfit:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root {
   --void: #060608;
@@ -1083,16 +1084,16 @@ footer{
     </div>
     <div class="hero-metrics">
       <div class="hm-item">
-        <div class="hm-val">12<span>+</span></div>
+        <div class="hm-val" id="metric-equipos">0</div>
         <div class="hm-lbl">Equipos activos</div>
       </div>
       <div class="hm-item">
-        <div class="hm-val">48</div>
+        <div class="hm-val" id="metric-partidos">0</div>
         <div class="hm-lbl">Partidos jugados</div>
       </div>
       <div class="hm-item">
-        <div class="hm-val">$<span>500K</span></div>
-        <div class="hm-lbl">En premios</div>
+        <div class="hm-val" id="metric-goles">0</div>
+        <div class="hm-lbl">Goles registrados</div>
       </div>
     </div>
   </div>
@@ -1102,38 +1103,34 @@ footer{
       <div class="lp-header">
         <div class="lp-live">
           <div class="live-pulse"></div>
-          En vivo ahora
+          <span id="live-status-label">Sincronizando</span>
         </div>
-        <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted)">J6 · 2025</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted)" id="live-status-meta">Conectando a la liga</span>
       </div>
       <div class="lp-match">
         <div class="lp-teams-row">
-          <span class="lp-team-name">Los Cóndores</span>
+          <span class="lp-team-name" id="live-team-local">Sin datos</span>
           <div>
-            <div class="lp-score">3 — 1</div>
-            <div class="lp-min">⏱ MIN. 37'</div>
+            <div class="lp-score" id="live-score">0 — 0</div>
+            <div class="lp-min" id="live-minute">Esperando partido</div>
           </div>
-          <span class="lp-team-name right">Los Pumas</span>
+          <span class="lp-team-name right" id="live-team-visita">Sin rival</span>
         </div>
       </div>
-      <div class="lp-events">
-        <div class="lp-event"><span class="lp-emin">08'</span>⚽ Rodrigo Vega — Cóndores</div>
-        <div class="lp-event"><span class="lp-emin">19'</span>⚽ Carlos Muñoz — Pumas</div>
-        <div class="lp-event"><span class="lp-emin">27'</span>⚽ Felipe Soto — Cóndores</div>
-        <div class="lp-event"><span class="lp-emin">31'</span>🟨 Andrés Rojas — Cóndores</div>
-        <div class="lp-event"><span class="lp-emin">37'</span>⚽ Rodrigo Vega — Cóndores</div>
+      <div class="lp-events" id="live-events">
+        <div class="lp-event"><span class="lp-emin">--</span>Cargando eventos...</div>
       </div>
     </div>
     <div class="mini-panels">
       <div class="mini-panel">
         <div class="mp-label">Líder</div>
-        <div class="mp-val"><span>1°</span></div>
-        <div class="mp-sub">Los Cóndores · 16 pts</div>
+        <div class="mp-val"><span id="leader-rank">--</span></div>
+        <div class="mp-sub" id="leader-summary">Tabla aun sin movimientos</div>
       </div>
       <div class="mini-panel">
         <div class="mp-label">Goleador</div>
-        <div class="mp-val"><span>10</span></div>
-        <div class="mp-sub">R. Vega · Cóndores</div>
+        <div class="mp-val"><span id="top-scorer-goals">0</span></div>
+        <div class="mp-sub" id="top-scorer-summary">Sin goles registrados</div>
       </div>
     </div>
   </div>
@@ -1166,7 +1163,7 @@ footer{
         <div class="tabla-card fade-up">
           <div class="tabla-head">
             <span class="tabla-title">Tabla de posiciones · Grupo A</span>
-            <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted)">6 equipos</span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted)" id="tabla-meta">0 equipos</span>
           </div>
           <table>
             <thead>
@@ -1177,56 +1174,9 @@ footer{
                 <th>GF</th><th>GC</th><th>DG</th><th>Pts</th>
               </tr>
             </thead>
-            <tbody>
-              <tr class="leader">
-                <td class="td-pos">1</td>
-                <td class="td-name" style="display:flex;align-items:center;gap:8px">
-                  <span style="width:6px;height:6px;border-radius:50%;background:var(--plasma);display:inline-block;flex-shrink:0"></span>
-                  Los Cóndores
-                </td>
-                <td>6</td><td>5</td><td>1</td><td>0</td>
-                <td>21</td><td>7</td><td class="td-dg-pos">+14</td>
-                <td class="td-pts">16</td>
-              </tr>
+            <tbody id="tabla-posiciones-body">
               <tr>
-                <td class="td-pos">2</td>
-                <td class="td-name" style="display:flex;align-items:center;gap:8px">
-                  <span style="width:6px;height:6px;border-radius:50%;background:var(--subtle);display:inline-block;flex-shrink:0"></span>
-                  Los Pumas
-                </td>
-                <td>6</td><td>4</td><td>1</td><td>1</td>
-                <td>14</td><td>9</td><td class="td-dg-pos">+5</td>
-                <td class="td-pts">13</td>
-              </tr>
-              <tr>
-                <td class="td-pos">3</td>
-                <td class="td-name" style="display:flex;align-items:center;gap:8px">
-                  <span style="width:6px;height:6px;border-radius:50%;background:var(--subtle);display:inline-block;flex-shrink:0"></span>
-                  Volcanes FC
-                </td>
-                <td>6</td><td>3</td><td>0</td><td>3</td>
-                <td>11</td><td>12</td><td class="td-dg-neg">−1</td>
-                <td class="td-pts">9</td>
-              </tr>
-              <tr>
-                <td class="td-pos">4</td>
-                <td class="td-name" style="display:flex;align-items:center;gap:8px">
-                  <span style="width:6px;height:6px;border-radius:50%;background:var(--subtle);display:inline-block;flex-shrink:0"></span>
-                  Los Halcones
-                </td>
-                <td>6</td><td>2</td><td>1</td><td>3</td>
-                <td>9</td><td>13</td><td class="td-dg-neg">−4</td>
-                <td class="td-pts">7</td>
-              </tr>
-              <tr>
-                <td class="td-pos">5</td>
-                <td class="td-name" style="display:flex;align-items:center;gap:8px">
-                  <span style="width:6px;height:6px;border-radius:50%;background:var(--subtle);display:inline-block;flex-shrink:0"></span>
-                  Deportivo Sur
-                </td>
-                <td>6</td><td>1</td><td>1</td><td>4</td>
-                <td>6</td><td>17</td><td class="td-dg-neg">−11</td>
-                <td class="td-pts">4</td>
+                <td colspan="10" style="padding:24px;text-align:center;color:var(--muted)">Cargando tabla...</td>
               </tr>
             </tbody>
           </table>
@@ -1239,11 +1189,9 @@ footer{
           <div class="tabla-head">
             <span class="tabla-title">Tabla de goleadores · Apertura 2025</span>
           </div>
-          <div class="scorer-item"><div class="si-rank top">1</div><div class="si-av top">RV</div><div class="si-info"><div class="si-name">Rodrigo Vega</div><div class="si-team">Los Cóndores</div></div><div class="si-goals">10 ⚽</div></div>
-          <div class="scorer-item"><div class="si-rank">2</div><div class="si-av">CM</div><div class="si-info"><div class="si-name">Carlos Muñoz</div><div class="si-team">Los Pumas</div></div><div class="si-goals">7 ⚽</div></div>
-          <div class="scorer-item"><div class="si-rank">3</div><div class="si-av">FS</div><div class="si-info"><div class="si-name">Felipe Soto</div><div class="si-team">Volcanes FC</div></div><div class="si-goals">5 ⚽</div></div>
-          <div class="scorer-item"><div class="si-rank">4</div><div class="si-av">AR</div><div class="si-info"><div class="si-name">Andrés Rojas</div><div class="si-team">Los Cóndores</div></div><div class="si-goals">4 ⚽</div></div>
-          <div class="scorer-item"><div class="si-rank">5</div><div class="si-av">MP</div><div class="si-info"><div class="si-name">Matías Pérez</div><div class="si-team">Los Halcones</div></div><div class="si-goals">3 ⚽</div></div>
+          <div id="tabla-goleadores-list">
+            <div class="scorer-item"><div class="si-rank top">1</div><div class="si-av top">--</div><div class="si-info"><div class="si-name">Cargando...</div><div class="si-team">Actualizando liga</div></div><div class="si-goals">0 ?</div></div>
+          </div>
         </div>
       </div>
 
@@ -1253,10 +1201,9 @@ footer{
           <div class="tabla-head">
             <span class="tabla-title">Valla menos batida · Apertura 2025</span>
           </div>
-          <div class="keeper-item"><div class="ki-rank">1</div><div class="ki-av" style="background:rgba(200,255,0,0.1);color:var(--plasma);border:1px solid rgba(200,255,0,0.2)">DC</div><div class="ki-info"><div class="ki-name">Diego Contreras</div><div class="ki-team">Los Cóndores</div></div><div style="text-align:right"><div class="ki-gc">7 GC</div><div class="ki-prom">1.17/partido</div></div><div class="invicto">3 invicto</div></div>
-          <div class="keeper-item"><div class="ki-rank">2</div><div class="ki-av">PH</div><div class="ki-info"><div class="ki-name">Pablo Herrera</div><div class="ki-team">Los Pumas</div></div><div style="text-align:right"><div class="ki-gc">9 GC</div><div class="ki-prom">1.50/partido</div></div><div class="invicto">2 invicto</div></div>
-          <div class="keeper-item"><div class="ki-rank">3</div><div class="ki-av">IF</div><div class="ki-info"><div class="ki-name">Ignacio Fuentes</div><div class="ki-team">Volcanes FC</div></div><div style="text-align:right"><div class="ki-gc">12 GC</div><div class="ki-prom">2.40/partido</div></div><div class="invicto">1 invicto</div></div>
-          <div class="keeper-item"><div class="ki-rank">4</div><div class="ki-av">SL</div><div class="ki-info"><div class="ki-name">Sebastián Lagos</div><div class="ki-team">Los Halcones</div></div><div style="text-align:right"><div class="ki-gc">13 GC</div><div class="ki-prom">2.17/partido</div></div><div class="invicto">1 invicto</div></div>
+          <div id="tabla-valla-list">
+            <div class="keeper-item"><div class="ki-rank">1</div><div class="ki-av">--</div><div class="ki-info"><div class="ki-name">Cargando...</div><div class="ki-team">Actualizando defensa</div></div><div style="text-align:right"><div class="ki-gc">0 GC</div><div class="ki-prom">0.00/partido</div></div><div class="invicto">0 invicto</div></div>
+          </div>
         </div>
       </div>
     </div>
@@ -1266,11 +1213,11 @@ footer{
       <div class="sidebar-card fade-up">
         <div class="sc-head">
           <span>Próximos partidos</span>
-          <span style="color:var(--muted)">J7</span>
+          <span style="color:var(--muted)" id="upcoming-meta">Agenda</span>
         </div>
-        <div class="match-row"><div class="mr-date">SAB 28 JUN · 10:00</div><div class="mr-teams"><span class="mr-team">Los Cóndores</span><span class="mr-vs">vs</span><span class="mr-team" style="text-align:right">Volcanes FC</span></div></div>
-        <div class="match-row"><div class="mr-date">SAB 28 JUN · 11:30</div><div class="mr-teams"><span class="mr-team">Los Pumas</span><span class="mr-vs">vs</span><span class="mr-team" style="text-align:right">Los Halcones</span></div></div>
-        <div class="match-row"><div class="mr-date">DOM 29 JUN · 09:00</div><div class="mr-teams"><span class="mr-team">Deportivo Sur</span><span class="mr-vs">vs</span><span class="mr-team" style="text-align:right">Los Cóndores</span></div></div>
+        <div id="upcoming-matches-list">
+          <div class="match-row"><div class="mr-date">Cargando</div><div class="mr-teams"><span class="mr-team">Proxima</span><span class="mr-vs">vs</span><span class="mr-team" style="text-align:right">fecha</span></div></div>
+        </div>
       </div>
 
       <div class="sidebar-card fade-up">
@@ -1288,64 +1235,22 @@ footer{
 <section id="resultados">
   <div class="results-header">
     <div>
-      <div class="s-eyebrow">Jornada 6</div>
+      <div class="s-eyebrow" id="results-meta">Ultimos partidos</div>
       <h2 class="s-title">ÚLTIMOS<br>RESULTADOS</h2>
     </div>
     <p class="s-sub" style="max-width:340px">Video completo en YouTube · Highlights en Instagram · Todos los partidos grabados con IA.</p>
   </div>
-  <div class="results-grid">
+  <div class="results-grid" id="results-grid">
     <div class="result-card fade-up">
-      <div class="rc-date">Sáb 21 Jun 2025 · 10:00 hrs</div>
+      <div class="rc-date">Cargando resultados...</div>
       <div class="rc-match">
-        <span class="rc-team">Los Cóndores</span>
-        <div class="rc-score">4 — 1</div>
-        <span class="rc-team right">Los Pumas</span>
+        <span class="rc-team">Liga</span>
+        <div class="rc-score">--</div>
+        <span class="rc-team right">SportFrame</span>
       </div>
       <div class="rc-footer">
-        <span class="rc-badge badge-done">Final</span>
-        <span style="font-size:11px;color:var(--muted)">⚽ Vega ×3, Rojas</span>
-        <a href="#" class="rc-link link-yt">▶ YouTube</a>
-        <a href="#" class="rc-link link-ig">✦ IG</a>
-      </div>
-    </div>
-    <div class="result-card fade-up">
-      <div class="rc-date">Sáb 21 Jun 2025 · 11:30 hrs</div>
-      <div class="rc-match">
-        <span class="rc-team">Volcanes FC</span>
-        <div class="rc-score">2 — 2</div>
-        <span class="rc-team right">Los Halcones</span>
-      </div>
-      <div class="rc-footer">
-        <span class="rc-badge badge-done">Final</span>
-        <span style="font-size:11px;color:var(--muted)">⚽ Soto ×2, Pérez ×2</span>
-        <a href="#" class="rc-link link-yt">▶ YouTube</a>
-        <a href="#" class="rc-link link-ig">✦ IG</a>
-      </div>
-    </div>
-    <div class="result-card is-live fade-up">
-      <div class="rc-date">Dom 22 Jun 2025 · 09:00 hrs</div>
-      <div class="rc-match">
-        <span class="rc-team">Los Cóndores</span>
-        <div class="rc-score live">3 — 1</div>
-        <span class="rc-team right">Los Pumas</span>
-      </div>
-      <div class="rc-footer">
-        <span class="rc-badge badge-live">⏱ Min. 37'</span>
-        <a href="#" class="rc-link" style="background:rgba(200,255,0,0.1);color:var(--plasma);border:1px solid rgba(200,255,0,0.2)">● En vivo</a>
-      </div>
-    </div>
-    <div class="result-card fade-up">
-      <div class="rc-date">Dom 22 Jun 2025 · 10:30 hrs</div>
-      <div class="rc-match">
-        <span class="rc-team">Deportivo Sur</span>
-        <div class="rc-score">1 — 3</div>
-        <span class="rc-team right">Volcanes FC</span>
-      </div>
-      <div class="rc-footer">
-        <span class="rc-badge badge-done">Final</span>
-        <span style="font-size:11px;color:var(--muted)">⚽ Araya, Soto ×2, Torres</span>
-        <a href="#" class="rc-link link-yt">▶ YouTube</a>
-        <a href="#" class="rc-link link-ig">✦ IG</a>
+        <span class="rc-badge badge-live">Sync</span>
+        <span style="font-size:11px;color:var(--muted)">Conectando con Supabase</span>
       </div>
     </div>
   </div>
@@ -1558,107 +1463,488 @@ footer{
 </footer>
 
 <script>
-// ── CURSOR ──
+const SUPABASE_URL = 'https://xnmiugofbewcfgpggkwe.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_ad3pNyA56DgBDtq0D7Dc8Q_ESN1lqr5';
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
 const cursor = document.getElementById('cursor');
 const ring = document.getElementById('cursor-ring');
-let mx=0,my=0,rx=0,ry=0;
-document.addEventListener('mousemove',e=>{
-  mx=e.clientX;my=e.clientY;
-  cursor.style.left=mx+'px';cursor.style.top=my+'px';
+let mx = 0, my = 0, rx = 0, ry = 0;
+document.addEventListener('mousemove', e => {
+  mx = e.clientX;
+  my = e.clientY;
+  cursor.style.left = mx + 'px';
+  cursor.style.top = my + 'px';
 });
-function animRing(){
-  rx+=(mx-rx)*.12;ry+=(my-ry)*.12;
-  ring.style.left=rx+'px';ring.style.top=ry+'px';
+function animRing() {
+  rx += (mx - rx) * 0.12;
+  ry += (my - ry) * 0.12;
+  ring.style.left = rx + 'px';
+  ring.style.top = ry + 'px';
   requestAnimationFrame(animRing);
 }
 animRing();
-document.querySelectorAll('a,button,.gal-item,.result-card,.service-card').forEach(el=>{
-  el.addEventListener('mouseenter',()=>{
-    cursor.style.width='16px';cursor.style.height='16px';
-    ring.style.width='52px';ring.style.height='52px';
-    ring.style.borderColor='rgba(200,255,0,.7)';
+document.querySelectorAll('a,button,.gal-item,.result-card,.service-card').forEach(el => {
+  el.addEventListener('mouseenter', () => {
+    cursor.style.width = '16px';
+    cursor.style.height = '16px';
+    ring.style.width = '52px';
+    ring.style.height = '52px';
+    ring.style.borderColor = 'rgba(200,255,0,.7)';
   });
-  el.addEventListener('mouseleave',()=>{
-    cursor.style.width='10px';cursor.style.height='10px';
-    ring.style.width='36px';ring.style.height='36px';
-    ring.style.borderColor='rgba(200,255,0,.4)';
-  });
-});
-
-// ── NAV SCROLL ──
-document.querySelectorAll('a[href^="#"]').forEach(a=>{
-  a.addEventListener('click',e=>{
-    const t=document.querySelector(a.getAttribute('href'));
-    if(t){e.preventDefault();t.scrollIntoView({behavior:'smooth',block:'start'})}
+  el.addEventListener('mouseleave', () => {
+    cursor.style.width = '10px';
+    cursor.style.height = '10px';
+    ring.style.width = '36px';
+    ring.style.height = '36px';
+    ring.style.borderColor = 'rgba(200,255,0,.4)';
   });
 });
 
-// ── TABS LIGA ──
-function showLiga(tab,btn){
-  document.querySelectorAll('.liga-panel').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
-  document.getElementById('liga-'+tab).classList.add('active');
+document.querySelectorAll('a[href^="#"]').forEach(a => {
+  a.addEventListener('click', e => {
+    const t = document.querySelector(a.getAttribute('href'));
+    if (t) {
+      e.preventDefault();
+      t.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  });
+});
+
+function showLiga(tab, btn) {
+  document.querySelectorAll('.liga-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+  document.getElementById('liga-' + tab).classList.add('active');
   btn.classList.add('active');
 }
 
-// ── GALERÍA ──
-const PHOTOS=[
-  {icon:'⚽',bg:'linear-gradient(135deg,#080f08,#0f2010)',caption:'Gol · Min. 34\' · Cóndores 4 — 1 Pumas',date:'21 Jun 2025'},
-  {icon:'🏆',bg:'linear-gradient(135deg,#0a0a14,#12122a)',caption:'Celebración · Los Cóndores',date:'21 Jun 2025'},
-  {icon:'🧤',bg:'linear-gradient(135deg,#140a08,#2a1208)',caption:'Gran atajada · Diego Contreras',date:'21 Jun 2025'},
-  {icon:'⚡',bg:'linear-gradient(135deg,#08100a,#0f2010)',caption:'Volcanes FC 2 — 2 Los Halcones',date:'21 Jun 2025'},
-  {icon:'⚽',bg:'linear-gradient(135deg,#140a0a,#2a0a10)',caption:'Gol del torneo · Jornada 5',date:'14 Jun 2025'},
-  {icon:'🏅',bg:'linear-gradient(135deg,#080814,#10102a)',caption:'MVP del partido · Rodrigo Vega',date:'14 Jun 2025'},
+const PHOTOS = [
+  { icon: '?', bg: 'linear-gradient(135deg,#080f08,#0f2010)', caption: 'Gol   Min. 34\'   Condores 4   1 Pumas', date: '21 Jun 2025' },
+  { icon: '??', bg: 'linear-gradient(135deg,#0a0a14,#12122a)', caption: 'Celebracion   Los Condores', date: '21 Jun 2025' },
+  { icon: '??', bg: 'linear-gradient(135deg,#140a08,#2a1208)', caption: 'Gran atajada   Diego Contreras', date: '21 Jun 2025' },
+  { icon: '?', bg: 'linear-gradient(135deg,#08100a,#0f2010)', caption: 'Volcanes FC 2   2 Los Halcones', date: '21 Jun 2025' },
+  { icon: '?', bg: 'linear-gradient(135deg,#140a0a,#2a0a10)', caption: 'Gol del torneo   Jornada 5', date: '14 Jun 2025' },
+  { icon: '??', bg: 'linear-gradient(135deg,#080814,#10102a)', caption: 'MVP del partido   Rodrigo Vega', date: '14 Jun 2025' },
 ];
-let currentPhoto=0;
-function openLightbox(i){
-  currentPhoto=i;renderLightbox();
-  const lb=document.getElementById('lightbox');
-  lb.style.display='flex';
+let currentPhoto = 0;
+function openLightbox(i) {
+  currentPhoto = i;
+  renderLightbox();
+  document.getElementById('lightbox').style.display = 'flex';
 }
-function renderLightbox(){
-  const p=PHOTOS[currentPhoto];
-  document.getElementById('lb-img').style.background=p.bg;
-  document.getElementById('lb-img').innerHTML=`<span style="font-size:64px;opacity:.3">${p.icon}</span>`;
-  document.getElementById('lb-caption').textContent=p.caption;
-  document.getElementById('lb-counter').textContent=`${currentPhoto+1} / ${PHOTOS.length} · ${p.date}`;
+function renderLightbox() {
+  const p = PHOTOS[currentPhoto];
+  document.getElementById('lb-img').style.background = p.bg;
+  document.getElementById('lb-img').innerHTML = `<span style="font-size:64px;opacity:.3">${p.icon}</span>`;
+  document.getElementById('lb-caption').textContent = p.caption;
+  document.getElementById('lb-counter').textContent = `${currentPhoto + 1} / ${PHOTOS.length}   ${p.date}`;
 }
-function closeLightbox(){document.getElementById('lightbox').style.display='none'}
-function nextPhoto(){currentPhoto=(currentPhoto+1)%PHOTOS.length;renderLightbox()}
-function prevPhoto(){currentPhoto=(currentPhoto-1+PHOTOS.length)%PHOTOS.length;renderLightbox()}
-document.addEventListener('keydown',e=>{
-  if(document.getElementById('lightbox').style.display==='flex'){
-    if(e.key==='ArrowRight')nextPhoto();
-    if(e.key==='ArrowLeft')prevPhoto();
-    if(e.key==='Escape')closeLightbox();
+function closeLightbox() { document.getElementById('lightbox').style.display = 'none'; }
+function nextPhoto() { currentPhoto = (currentPhoto + 1) % PHOTOS.length; renderLightbox(); }
+function prevPhoto() { currentPhoto = (currentPhoto - 1 + PHOTOS.length) % PHOTOS.length; renderLightbox(); }
+document.addEventListener('keydown', e => {
+  if (document.getElementById('lightbox').style.display === 'flex') {
+    if (e.key === 'ArrowRight') nextPhoto();
+    if (e.key === 'ArrowLeft') prevPhoto();
+    if (e.key === 'Escape') closeLightbox();
   }
 });
-document.getElementById('lightbox').addEventListener('click',function(e){if(e.target===this)closeLightbox()});
+document.getElementById('lightbox').addEventListener('click', function (e) {
+  if (e.target === this) closeLightbox();
+});
 
-function filterGal(btn,j){
-  document.querySelectorAll('.gal-filter').forEach(b=>b.classList.remove('active'));
+function filterGal(btn, j) {
+  document.querySelectorAll('.gal-filter').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  document.querySelectorAll('.gal-item').forEach(item=>{
-    item.style.display=j==='all'||item.classList.contains('gal-item-'+j)?'flex':'none';
+  document.querySelectorAll('.gal-item').forEach(item => {
+    item.style.display = j === 'all' || item.classList.contains('gal-item-' + j) ? 'flex' : 'none';
   });
 }
 
-// ── FADE IN ──
-const obs=new IntersectionObserver(entries=>{
-  entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible')});
-},{threshold:.1});
-document.querySelectorAll('.fade-up').forEach(el=>obs.observe(el));
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) e.target.classList.add('visible');
+  });
+}, { threshold: 0.1 });
+document.querySelectorAll('.fade-up').forEach(el => obs.observe(el));
 
-// ── NAV ACTIVE ──
-const sections=document.querySelectorAll('section[id]');
-const navLinks=document.querySelectorAll('.nav-links a');
-window.addEventListener('scroll',()=>{
-  let cur='';
-  sections.forEach(s=>{if(window.scrollY>=s.offsetTop-80)cur=s.id});
-  navLinks.forEach(a=>{
-    a.style.color=a.getAttribute('href')==='#'+cur?'var(--white)':'';
+const sections = document.querySelectorAll('section[id]');
+const navLinks = document.querySelectorAll('.nav-links a');
+window.addEventListener('scroll', () => {
+  let cur = '';
+  sections.forEach(s => { if (window.scrollY >= s.offsetTop - 80) cur = s.id; });
+  navLinks.forEach(a => {
+    a.style.color = a.getAttribute('href') === '#' + cur ? 'var(--white)' : '';
   });
 });
+
+function initials(name) {
+  return (name || 'SF')
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map(part => part[0]?.toUpperCase() || '')
+    .join('') || 'SF';
+}
+
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+}
+
+function matchDateLabel(match) {
+  const raw = match.fecha || match.created_at;
+  if (!raw) return `J${match.jornada || '-'}   Sin horario`;
+  const date = new Date(raw);
+  return new Intl.DateTimeFormat('es-CL', {
+    weekday: 'short',
+    day: '2-digit',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit'
+  }).format(date).replace(',', '  ');
+}
+
+function resultBadge(match) {
+  if (match.estado === 'en_curso') {
+    return `<span class="rc-badge badge-live">En vivo</span>`;
+  }
+  if (match.estado === 'pendiente') {
+    return `<span class="rc-badge badge-done">Programado</span>`;
+  }
+  return `<span class="rc-badge badge-done">Final</span>`;
+}
+
+function eventIcon(type) {
+  if (type === 'gol') return '?';
+  if (type === 'amarilla') return '??';
+  if (type === 'roja') return '??';
+  return ' ';
+}
+
+function teamNameById(teamsMap, id) {
+  return teamsMap.get(id)?.nombre || 'Equipo';
+}
+
+function computeStandings(teams, matches) {
+  const table = new Map();
+  teams.forEach(team => {
+    table.set(team.id, {
+      id: team.id,
+      nombre: team.nombre,
+      pj: 0, pg: 0, pe: 0, pp: 0,
+      gf: 0, gc: 0, dg: 0, pts: 0,
+      invictos: 0
+    });
+  });
+
+  matches.filter(match => match.estado === 'finalizado').forEach(match => {
+    const local = table.get(match.equipo_local_id);
+    const visita = table.get(match.equipo_visita_id);
+    if (!local || !visita) return;
+
+    const gl = Number(match.goles_local || 0);
+    const gv = Number(match.goles_visita || 0);
+
+    local.pj += 1; visita.pj += 1;
+    local.gf += gl; local.gc += gv;
+    visita.gf += gv; visita.gc += gl;
+    if (gv === 0) local.invictos += 1;
+    if (gl === 0) visita.invictos += 1;
+
+    if (gl > gv) {
+      local.pg += 1; local.pts += 3;
+      visita.pp += 1;
+    } else if (gl < gv) {
+      visita.pg += 1; visita.pts += 3;
+      local.pp += 1;
+    } else {
+      local.pe += 1; visita.pe += 1;
+      local.pts += 1; visita.pts += 1;
+    }
+  });
+
+  return [...table.values()]
+    .map(row => ({ ...row, dg: row.gf - row.gc }))
+    .sort((a, b) => (
+      b.pts - a.pts ||
+      b.dg - a.dg ||
+      b.gf - a.gf ||
+      a.nombre.localeCompare(b.nombre)
+    ));
+}
+
+function computeScorers(events, playersMap, teamsMap) {
+  const goals = new Map();
+  events.filter(event => event.tipo === 'gol').forEach(event => {
+    const player = playersMap.get(event.jugador_id);
+    const teamId = event.equipo_id || player?.equipo_id;
+    const current = goals.get(event.jugador_id) || {
+      jugador_id: event.jugador_id,
+      nombre: player?.nombre || 'Jugador',
+      equipo: teamNameById(teamsMap, teamId),
+      goles: 0
+    };
+    current.goles += 1;
+    goals.set(event.jugador_id, current);
+  });
+  return [...goals.values()]
+    .sort((a, b) => b.goles - a.goles || a.nombre.localeCompare(b.nombre))
+    .slice(0, 5);
+}
+
+function computeKeepers(standings, players) {
+  const keeperAliases = ['arquero', 'portero', 'goalkeeper', 'keeper'];
+  const keepersByTeam = new Map();
+  players.forEach(player => {
+    const pos = String(player.posicion || '').toLowerCase();
+    if (keeperAliases.some(alias => pos.includes(alias)) && player.equipo_id && !keepersByTeam.has(player.equipo_id)) {
+      keepersByTeam.set(player.equipo_id, player);
+    }
+  });
+
+  return standings
+    .filter(row => row.pj > 0)
+    .map(row => {
+      const keeper = keepersByTeam.get(row.id);
+      return {
+        nombre: keeper?.nombre || row.nombre,
+        equipo: row.nombre,
+        gc: row.gc,
+        promedio: row.pj ? (row.gc / row.pj) : 0,
+        invictos: row.invictos,
+        avatar: initials(keeper?.nombre || row.nombre)
+      };
+    })
+    .sort((a, b) => a.gc - b.gc || a.promedio - b.promedio || b.invictos - a.invictos)
+    .slice(0, 4);
+}
+
+function renderStandings(standings) {
+  const body = document.getElementById('tabla-posiciones-body');
+  document.getElementById('tabla-meta').textContent = `${standings.length} equipos`;
+  if (!standings.length) {
+    body.innerHTML = `<tr><td colspan="10" style="padding:24px;text-align:center;color:var(--muted)">Aun no hay partidos finalizados.</td></tr>`;
+    return;
+  }
+
+  body.innerHTML = standings.map((row, index) => `
+    <tr class="${index === 0 ? 'leader' : ''}">
+      <td class="td-pos">${index + 1}</td>
+      <td class="td-name" style="display:flex;align-items:center;gap:8px">
+        <span style="width:6px;height:6px;border-radius:50%;background:${index === 0 ? 'var(--plasma)' : 'var(--subtle)'};display:inline-block;flex-shrink:0"></span>
+        ${escapeHtml(row.nombre)}
+      </td>
+      <td>${row.pj}</td><td>${row.pg}</td><td>${row.pe}</td><td>${row.pp}</td>
+      <td>${row.gf}</td><td>${row.gc}</td>
+      <td class="${row.dg >= 0 ? 'td-dg-pos' : 'td-dg-neg'}">${row.dg >= 0 ? '+' : ''}${row.dg}</td>
+      <td class="td-pts">${row.pts}</td>
+    </tr>
+  `).join('');
+}
+
+function renderScorers(scorers) {
+  const list = document.getElementById('tabla-goleadores-list');
+  if (!scorers.length) {
+    list.innerHTML = `<div class="scorer-item"><div class="si-rank top">--</div><div class="si-av top">SF</div><div class="si-info"><div class="si-name">Sin goles aun</div><div class="si-team">Esperando primer partido</div></div><div class="si-goals">0 ?</div></div>`;
+    return;
+  }
+  list.innerHTML = scorers.map((scorer, index) => `
+    <div class="scorer-item">
+      <div class="si-rank ${index === 0 ? 'top' : ''}">${index + 1}</div>
+      <div class="si-av ${index === 0 ? 'top' : ''}">${initials(scorer.nombre)}</div>
+      <div class="si-info"><div class="si-name">${escapeHtml(scorer.nombre)}</div><div class="si-team">${escapeHtml(scorer.equipo)}</div></div>
+      <div class="si-goals">${scorer.goles} ?</div>
+    </div>
+  `).join('');
+}
+
+function renderKeepers(keepers) {
+  const list = document.getElementById('tabla-valla-list');
+  if (!keepers.length) {
+    list.innerHTML = `<div class="keeper-item"><div class="ki-rank">--</div><div class="ki-av">SF</div><div class="ki-info"><div class="ki-name">Sin partidos aun</div><div class="ki-team">No hay defensa evaluable</div></div><div style="text-align:right"><div class="ki-gc">0 GC</div><div class="ki-prom">0.00/partido</div></div><div class="invicto">0 invicto</div></div>`;
+    return;
+  }
+  list.innerHTML = keepers.map((keeper, index) => `
+    <div class="keeper-item">
+      <div class="ki-rank">${index + 1}</div>
+      <div class="ki-av" style="${index === 0 ? 'background:rgba(200,255,0,0.1);color:var(--plasma);border:1px solid rgba(200,255,0,0.2)' : ''}">${keeper.avatar}</div>
+      <div class="ki-info"><div class="ki-name">${escapeHtml(keeper.nombre)}</div><div class="ki-team">${escapeHtml(keeper.equipo)}</div></div>
+      <div style="text-align:right"><div class="ki-gc">${keeper.gc} GC</div><div class="ki-prom">${keeper.promedio.toFixed(2)}/partido</div></div>
+      <div class="invicto">${keeper.invictos} invicto</div>
+    </div>
+  `).join('');
+}
+
+function renderUpcoming(matches) {
+  const box = document.getElementById('upcoming-matches-list');
+  document.getElementById('upcoming-meta').textContent = matches.length ? `J${matches[0].jornada || '-'}` : 'Agenda';
+  if (!matches.length) {
+    box.innerHTML = `<div class="match-row"><div class="mr-date">Sin programacion</div><div class="mr-teams"><span class="mr-team">La liga</span><span class="mr-vs"> </span><span class="mr-team" style="text-align:right">aun no publica fechas</span></div></div>`;
+    return;
+  }
+  box.innerHTML = matches.slice(0, 3).map(match => `
+    <div class="match-row">
+      <div class="mr-date">${escapeHtml(matchDateLabel(match))}</div>
+      <div class="mr-teams">
+        <span class="mr-team">${escapeHtml(match.local?.nombre || 'Local')}</span>
+        <span class="mr-vs">vs</span>
+        <span class="mr-team" style="text-align:right">${escapeHtml(match.visita?.nombre || 'Visita')}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderResults(matches, eventSummary) {
+  const grid = document.getElementById('results-grid');
+  document.getElementById('results-meta').textContent = matches.length ? `Jornada ${matches[0].jornada || '-'}` : 'Ultimos partidos';
+  if (!matches.length) {
+    grid.innerHTML = `<div class="result-card fade-up"><div class="rc-date">Aun no hay resultados.</div><div class="rc-match"><span class="rc-team">SportFrame</span><div class="rc-score">--</div><span class="rc-team right">Liga</span></div><div class="rc-footer"><span class="rc-badge badge-live">Pendiente</span><span style="font-size:11px;color:var(--muted)">La primera fecha aparecera aqui.</span></div></div>`;
+    return;
+  }
+  grid.innerHTML = matches.slice(0, 4).map(match => `
+    <div class="result-card fade-up ${match.estado === 'en_curso' ? 'is-live' : ''}">
+      <div class="rc-date">${escapeHtml(matchDateLabel(match))}</div>
+      <div class="rc-match">
+        <span class="rc-team">${escapeHtml(match.local?.nombre || 'Local')}</span>
+        <div class="rc-score ${match.estado === 'en_curso' ? 'live' : ''}">${match.goles_local || 0}   ${match.goles_visita || 0}</div>
+        <span class="rc-team right">${escapeHtml(match.visita?.nombre || 'Visita')}</span>
+      </div>
+      <div class="rc-footer">
+        ${resultBadge(match)}
+        <span style="font-size:11px;color:var(--muted)">${escapeHtml(eventSummary.get(match.id) || (match.estado === 'en_curso' ? 'Partido activo' : 'Sin resumen de goles'))}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderLive(match, events, standings, scorers) {
+  const statusLabel = document.getElementById('live-status-label');
+  const statusMeta = document.getElementById('live-status-meta');
+  const teamLocal = document.getElementById('live-team-local');
+  const teamVisita = document.getElementById('live-team-visita');
+  const score = document.getElementById('live-score');
+  const minute = document.getElementById('live-minute');
+  const eventsBox = document.getElementById('live-events');
+  const leader = standings[0];
+  const topScorer = scorers[0];
+
+  document.getElementById('leader-rank').textContent = leader ? `${1} ` : '--';
+  document.getElementById('leader-summary').textContent = leader ? `${leader.nombre}   ${leader.pts} pts` : 'Tabla aun sin movimientos';
+  document.getElementById('top-scorer-goals').textContent = topScorer ? topScorer.goles : '0';
+  document.getElementById('top-scorer-summary').textContent = topScorer ? `${topScorer.nombre}   ${topScorer.equipo}` : 'Sin goles registrados';
+
+  if (!match) {
+    statusLabel.textContent = 'Sin partido en vivo';
+    statusMeta.textContent = 'Ultima actualizacion desde la liga';
+    teamLocal.textContent = leader?.nombre || 'SportFrame';
+    teamVisita.textContent = topScorer?.equipo || 'Liga';
+    score.textContent = `${leader?.pts || 0}   ${topScorer?.goles || 0}`;
+    minute.textContent = 'Tabla vs goleador';
+    eventsBox.innerHTML = `<div class="lp-event"><span class="lp-emin">OK</span>La web ya esta conectada a Supabase.</div>`;
+    return;
+  }
+
+  statusLabel.textContent = 'En vivo ahora';
+  statusMeta.textContent = `J${match.jornada || '-'}   ${match.temporada || 'Temporada activa'}`;
+  teamLocal.textContent = match.local?.nombre || 'Local';
+  teamVisita.textContent = match.visita?.nombre || 'Visita';
+  score.textContent = `${match.goles_local || 0}   ${match.goles_visita || 0}`;
+  minute.textContent = `? Partido en curso`;
+  const relevant = events.filter(event => event.partido_id === match.id).slice(-5);
+  eventsBox.innerHTML = relevant.length ? relevant.map(event => `
+    <div class="lp-event"><span class="lp-emin">${event.minuto || '--'}'</span>${eventIcon(event.tipo)} ${escapeHtml(event.jugadores?.nombre || 'Jugador')}   ${escapeHtml(event.equipo_nombre || 'Equipo')}</div>
+  `).join('') : `<div class="lp-event"><span class="lp-emin">00'</span>Sin eventos cargados aun.</div>`;
+}
+
+function buildEventSummary(events) {
+  const summary = new Map();
+  events.filter(event => event.tipo === 'gol').forEach(event => {
+    const current = summary.get(event.partido_id) || [];
+    current.push(event.jugadores?.nombre || 'Jugador');
+    summary.set(event.partido_id, current);
+  });
+  return new Map([...summary.entries()].map(([matchId, names]) => {
+    const counter = names.reduce((acc, name) => {
+      acc[name] = (acc[name] || 0) + 1;
+      return acc;
+    }, {});
+    const text = Object.entries(counter).map(([name, count]) => `${name}${count > 1 ? ` x${count}` : ''}`).join(', ');
+    return [matchId, text || 'Sin goles'];
+  }));
+}
+
+async function loadLeagueData() {
+  const [{ data: equipos, error: equiposError }, { data: jugadores, error: jugadoresError }, { data: partidos, error: partidosError }, { data: eventos, error: eventosError }] = await Promise.all([
+    db.from('equipos').select('*').order('nombre'),
+    db.from('jugadores').select('id,nombre,equipo_id,posicion,estado'),
+    db.from('partidos').select('id,equipo_local_id,equipo_visita_id,goles_local,goles_visita,estado,jornada,temporada,fecha,created_at,local:equipos!partidos_equipo_local_id_fkey(id,nombre),visita:equipos!partidos_equipo_visita_id_fkey(id,nombre)').order('fecha', { ascending: true, nullsFirst: false }).order('created_at', { ascending: false }),
+    db.from('eventos').select('id,partido_id,jugador_id,tipo,minuto,equipo_id,jugadores(nombre)').order('minuto', { ascending: true })
+  ]);
+
+  const error = equiposError || jugadoresError || partidosError || eventosError;
+  if (error) throw error;
+
+  const teams = equipos || [];
+  const players = jugadores || [];
+  const matches = partidos || [];
+  const enrichedEvents = (eventos || []).map(event => ({
+    ...event,
+    equipo_nombre: teamNameById(new Map(teams.map(team => [team.id, team])), event.equipo_id)
+  }));
+
+  const teamsMap = new Map(teams.map(team => [team.id, team]));
+  const playersMap = new Map(players.map(player => [player.id, player]));
+  const standings = computeStandings(teams, matches);
+  const scorers = computeScorers(enrichedEvents, playersMap, teamsMap);
+  const keepers = computeKeepers(standings, players);
+  const finished = matches.filter(match => match.estado === 'finalizado').sort((a, b) => new Date(b.fecha || b.created_at || 0) - new Date(a.fecha || a.created_at || 0));
+  const live = matches.find(match => match.estado === 'en_curso') || null;
+  const upcoming = matches.filter(match => match.estado === 'pendiente').sort((a, b) => new Date(a.fecha || a.created_at || 0) - new Date(b.fecha || b.created_at || 0));
+  const eventSummary = buildEventSummary(enrichedEvents);
+
+  document.getElementById('metric-equipos').textContent = String(teams.length);
+  document.getElementById('metric-partidos').textContent = String(finished.length);
+  document.getElementById('metric-goles').textContent = String(enrichedEvents.filter(event => event.tipo === 'gol').length);
+
+  renderStandings(standings);
+  renderScorers(scorers);
+  renderKeepers(keepers);
+  renderUpcoming(upcoming);
+  renderResults(live ? [live, ...finished] : finished, eventSummary);
+  renderLive(live, enrichedEvents, standings, scorers);
+}
+
+let refreshTimer = null;
+function scheduleRefresh() {
+  clearTimeout(refreshTimer);
+  refreshTimer = setTimeout(() => {
+    loadLeagueData().catch(error => {
+      document.getElementById('live-status-label').textContent = 'Error de conexion';
+      document.getElementById('live-status-meta').textContent = error.message;
+    });
+  }, 300);
+}
+
+loadLeagueData().catch(error => {
+  document.getElementById('live-status-label').textContent = 'Error de conexion';
+  document.getElementById('live-status-meta').textContent = error.message;
+  document.getElementById('live-events').innerHTML = `<div class="lp-event"><span class="lp-emin">ERR</span>No fue posible leer Supabase.</div>`;
+});
+
+db.channel('sportframe-web-live')
+  .on('postgres_changes', { event: '*', schema: 'public', table: 'partidos' }, scheduleRefresh)
+  .on('postgres_changes', { event: '*', schema: 'public', table: 'eventos' }, scheduleRefresh)
+  .on('postgres_changes', { event: '*', schema: 'public', table: 'equipos' }, scheduleRefresh)
+  .on('postgres_changes', { event: '*', schema: 'public', table: 'jugadores' }, scheduleRefresh)
+  .subscribe();
 </script>
 </body>
 </html>
+
+
