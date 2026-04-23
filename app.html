@@ -1,0 +1,1539 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>SportFrame App</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=Outfit:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--void:#050507;--deep:#0B0C12;--surface:#131520;--lifted:#1A1E2A;--edge:rgba(255,255,255,0.08);--plasma:#C8FF00;--plasma-dim:rgba(200,255,0,0.08);--ice:#00D4FF;--ice-dim:rgba(0,212,255,0.08);--fire:#FF4D1C;--fire-dim:rgba(255,77,28,0.1);--amber:#FF9F0A;--amber-dim:rgba(255,159,10,0.1);--white:#EEEEF2;--muted:#7A7D8B;--subtle:#2E3447}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:radial-gradient(circle at top right,rgba(0,212,255,0.08),transparent 28%),radial-gradient(circle at top left,rgba(200,255,0,0.07),transparent 24%),var(--void)}
+body{font-family:'Outfit',sans-serif;color:var(--white);font-size:15px;user-select:none}
+*{scrollbar-width:none;-ms-overflow-style:none}*::-webkit-scrollbar{display:none}
+.screen{position:absolute;inset:0;display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:opacity .25s}
+.screen.active{opacity:1;pointer-events:all}
+#screen-login{background:var(--void);justify-content:center;align-items:center;padding:32px}
+.login-logo{font-family:'Syne',sans-serif;font-size:36px;font-weight:800;letter-spacing:-1px;margin-bottom:6px;text-align:center}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--plasma);margin-left:3px;vertical-align:middle;animation:dp 2s ease infinite}
+@keyframes dp{0%,100%{transform:scale(1)}50%{transform:scale(1.5);opacity:.6}}
+.login-sub{font-size:11px;color:var(--muted);text-align:center;margin-bottom:40px;font-family:'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase}
+.login-card{background:var(--surface);border:1px solid var(--edge);border-radius:24px;padding:28px;width:100%;max-width:340px}
+.lc-title{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;margin-bottom:22px}
+.fl{font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:7px;display:block;font-family:'JetBrains Mono',monospace}
+.fi{width:100%;background:var(--lifted);border:1px solid var(--edge);border-radius:12px;padding:13px 16px;font-size:15px;color:var(--white);font-family:'Outfit',sans-serif;outline:none;transition:border-color .2s;margin-bottom:16px}
+.fi:focus{border-color:rgba(200,255,0,0.4)}
+.btn-p{width:100%;background:var(--plasma);color:var(--void);border:none;border-radius:12px;padding:15px;font-size:15px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif;transition:all .2s;margin-top:4px}
+.btn-p:active{transform:scale(.97)}
+.btn-s{width:100%;background:transparent;color:var(--white);border:1px solid var(--edge);border-radius:12px;padding:14px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif;transition:all .2s;margin-top:10px}
+.btn-s:active{transform:scale(.97)}
+.btn-s:hover{border-color:rgba(200,255,0,0.3);color:var(--plasma)}
+.btn-x{width:100%;background:rgba(255,255,255,0.03);color:var(--muted);border:1px solid var(--edge);border-radius:12px;padding:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif;transition:all .2s;margin-top:10px}
+.btn-x:hover{color:var(--white);border-color:rgba(255,255,255,0.16)}
+.err{background:rgba(255,77,28,0.1);border:1px solid rgba(255,77,28,0.2);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--fire);margin-top:12px;display:none;text-align:center}
+.login-help{font-size:11px;color:var(--muted);line-height:1.6;margin-top:14px;text-align:center}
+.login-help strong{color:var(--white)}
+.top-bar{height:62px;background:linear-gradient(180deg,rgba(11,12,18,0.98),rgba(8,9,14,0.92));border-bottom:1px solid var(--edge);box-shadow:0 18px 40px rgba(0,0,0,0.28);display:flex;align-items:center;padding:0 20px;gap:12px;flex-shrink:0}
+.tb-logo{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;letter-spacing:-.5px}
+.tb-role{font-size:9px;font-weight:700;padding:3px 10px;border-radius:100px;text-transform:uppercase;letter-spacing:.08em;font-family:'JetBrains Mono',monospace}
+.ra{background:rgba(255,77,28,0.12);color:#FF6A3D;border:1px solid rgba(255,77,28,0.2)}
+.rar{background:rgba(255,159,10,0.1);color:var(--amber);border:1px solid rgba(255,159,10,0.2)}
+.rc{background:var(--plasma-dim);color:var(--plasma);border:1px solid rgba(200,255,0,0.2)}
+.rj{background:var(--ice-dim);color:var(--ice);border:1px solid rgba(0,212,255,0.2)}
+.tb-space{flex:1}
+.tb-av{width:36px;height:36px;border-radius:50%;background:var(--plasma-dim);border:1.5px solid rgba(200,255,0,0.3);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--plasma);cursor:pointer;font-family:'JetBrains Mono',monospace}
+.content{flex:1;overflow-y:auto;overflow-x:hidden}
+.bottom-nav{height:72px;background:linear-gradient(180deg,rgba(9,10,16,0.95),rgba(6,6,8,0.99));border-top:1px solid var(--edge);display:flex;align-items:center;padding:0 10px 4px;flex-shrink:0;box-shadow:0 -18px 40px rgba(0,0,0,0.25)}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:8px 4px;border-radius:12px;transition:all .15s}
+.nav-item.active .ni,.nav-item.active .nl{color:var(--plasma)}
+.ni{font-size:19px;color:var(--muted)}
+.nl{font-size:9px;font-weight:600;color:var(--muted);letter-spacing:.04em;font-family:'JetBrains Mono',monospace;text-transform:uppercase}
+.panel{padding:20px 18px 26px}
+.ey{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:500;color:var(--plasma);text-transform:uppercase;letter-spacing:.12em;margin-bottom:4px}
+.pt{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;letter-spacing:-.5px;margin-bottom:4px}
+.ps{font-size:12px;color:var(--muted);margin-bottom:20px}
+.card{background:linear-gradient(180deg,rgba(24,27,38,0.96),rgba(18,20,31,0.98));border:1px solid rgba(255,255,255,0.07);border-radius:20px;overflow:hidden;margin-bottom:14px;box-shadow:0 20px 44px rgba(0,0,0,0.2)}
+.ch{padding:12px 16px;border-bottom:1px solid var(--edge);display:flex;align-items:center;justify-content:space-between}
+.ct{font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-family:'JetBrains Mono',monospace}
+.lp{display:flex;align-items:center;gap:5px;font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;color:var(--plasma);text-transform:uppercase;letter-spacing:.1em}
+.ld{width:6px;height:6px;border-radius:50%;background:var(--plasma);animation:lp 1.2s ease infinite}
+@keyframes lp{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(200,255,0,.4)}70%{opacity:.6;box-shadow:0 0 0 5px rgba(200,255,0,0)}}
+.tbl{width:100%;border-collapse:collapse}
+.tbl th{padding:9px 14px;font-size:9px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;text-align:left;background:rgba(255,255,255,0.02);font-family:'JetBrains Mono',monospace}
+.tbl td{padding:11px 14px;font-size:12px;color:var(--muted);border-bottom:1px solid rgba(255,255,255,0.03)}
+.tbl tbody tr:last-child td{border-bottom:none}
+.tbl tbody tr.ldr{background:rgba(200,255,0,0.03)}
+.tn{color:var(--white)!important;font-weight:600!important}
+.tp{color:var(--plasma)!important;font-weight:700!important;font-family:'JetBrains Mono',monospace}
+.tpp{color:var(--plasma)!important}
+.tpn{color:var(--fire)!important}
+.sr{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.03)}
+.sr:last-child{border-bottom:none}
+.srk{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--subtle);min-width:22px;line-height:1}
+.srk.top{color:var(--plasma)}
+.sav{width:36px;height:36px;border-radius:50%;background:var(--lifted);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--muted);flex-shrink:0;border:1px solid var(--edge);font-family:'JetBrains Mono',monospace}
+.sav.top{background:var(--plasma-dim);border-color:rgba(200,255,0,0.25);color:var(--plasma)}
+.si{flex:1}
+.sn{font-size:13px;font-weight:600;color:var(--white)}
+.st{font-size:10px;color:var(--muted)}
+.sg{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--plasma);background:var(--plasma-dim);padding:4px 10px;border-radius:6px;border:1px solid rgba(200,255,0,0.15)}
+.ml{background:var(--surface);border:1px solid rgba(200,255,0,0.15);border-radius:18px;padding:18px;margin-bottom:12px}
+.mlh{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.mlj{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.mlt{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.mltn{font-family:'Syne',sans-serif;font-size:14px;font-weight:800;flex:1;letter-spacing:-.3px}
+.mltn.r{text-align:right}
+.mls{font-family:'Syne',sans-serif;font-size:44px;font-weight:800;letter-spacing:4px;text-align:center;min-width:110px;color:var(--white)}
+.mls.pl{color:var(--plasma)}
+.mlm{text-align:center;margin-top:6px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--plasma);letter-spacing:.06em}
+.sg-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.sc{background:var(--surface);border:1px solid var(--edge);border-radius:14px;padding:16px}
+.sv{font-family:'Syne',sans-serif;font-size:32px;font-weight:800;line-height:1;color:var(--white)}
+.sv .a{color:var(--plasma)}
+.sl{font-size:10px;color:var(--muted);margin-top:5px;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:.06em}
+.asc{background:var(--surface);border:1px solid rgba(200,255,0,0.15);border-radius:18px;padding:20px;margin-bottom:16px}
+.asct{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.ascj{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.ascr{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.ascrn{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;flex:1;letter-spacing:-.3px}
+.ascrn.r{text-align:right}
+.ascrs{font-family:'Syne',sans-serif;font-size:52px;font-weight:800;letter-spacing:6px;text-align:center;min-width:130px;color:var(--white)}
+.ascrm{text-align:center;margin-top:4px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--plasma);letter-spacing:.06em}
+.ag{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.ab{border-radius:18px;padding:22px 12px;border:1px solid var(--edge);background:var(--surface);cursor:pointer;text-align:center;transition:all .15s}
+.ab:active{transform:scale(.93)}
+.abi{font-size:32px;display:block;margin-bottom:6px}
+.abl{font-size:12px;font-weight:700;color:var(--white);font-family:'Outfit',sans-serif}
+.bg{background:rgba(200,255,0,0.05);border-color:rgba(200,255,0,0.2)}
+.by{background:rgba(255,159,10,0.05);border-color:rgba(255,159,10,0.2)}
+.br{background:rgba(255,77,28,0.05);border-color:rgba(255,77,28,0.2)}
+.ev{display:flex;align-items:center;gap:10px;background:var(--surface);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--muted);border:1px solid var(--edge);margin-bottom:6px}
+.em{font-family:'JetBrains Mono',monospace;color:var(--plasma);min-width:28px;font-size:10px}
+.pc{display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid rgba(255,255,255,0.03);cursor:pointer;transition:background .15s}
+.pc:last-child{border-bottom:none}
+.pc:active{background:rgba(255,255,255,0.03)}
+.pca{width:42px;height:42px;border-radius:50%;background:var(--lifted);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--plasma);flex-shrink:0;border:1.5px solid rgba(200,255,0,0.2);font-family:'JetBrains Mono',monospace}
+.pci{flex:1}
+.pcn{font-size:14px;font-weight:600;color:var(--white)}
+.pcp{font-size:10px;color:var(--muted);margin-top:2px}
+.pcs{font-size:9px;font-weight:700;padding:3px 8px;border-radius:4px;text-transform:uppercase;letter-spacing:.05em;font-family:'JetBrains Mono',monospace}
+.sok{background:var(--plasma-dim);color:var(--plasma);border:1px solid rgba(200,255,0,0.2)}
+.sw{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(255,159,10,0.2)}
+.sp{background:rgba(255,255,255,0.05);color:var(--muted);border:1px solid var(--edge)}
+.li{display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid rgba(255,255,255,0.03);cursor:pointer;transition:background .15s}
+.li:last-child{border-bottom:none}
+.li:active{background:rgba(255,255,255,0.03)}
+.lic{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;background:var(--lifted);border:1px solid var(--edge)}
+.lii{flex:1}
+.lit{font-size:13px;font-weight:600;color:var(--white)}
+.lis{font-size:10px;color:var(--muted);margin-top:2px}
+.lia{font-size:16px;color:var(--subtle)}
+.adg{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.adc{background:linear-gradient(180deg,rgba(24,27,38,0.96),rgba(17,18,28,0.98));border:1px solid rgba(255,255,255,0.07);border-radius:18px;padding:18px;cursor:pointer;transition:all .2s;text-align:center;box-shadow:0 12px 32px rgba(0,0,0,0.18)}
+.adc:active{transform:scale(.96)}
+.adci{font-size:26px;margin-bottom:8px}
+.adct{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-family:'JetBrains Mono',monospace;margin-bottom:6px}
+.adcv{font-family:'Syne',sans-serif;font-size:30px;font-weight:800;color:var(--plasma);line-height:1}
+.adcs{font-size:10px;color:var(--muted);margin-top:3px}
+.mo{position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:200;display:flex;align-items:flex-end;opacity:0;pointer-events:none;transition:opacity .2s;backdrop-filter:blur(6px)}
+.mo.active{opacity:1;pointer-events:all}
+.ms{background:var(--deep);border-radius:24px 24px 0 0;padding:24px 20px 44px;width:100%;transform:translateY(100%);transition:transform .3s cubic-bezier(.32,.72,0,1);border-top:1px solid var(--edge);max-height:90vh;overflow-y:auto}
+.mo.active .ms{transform:translateY(0)}
+.mh{width:36px;height:4px;border-radius:2px;background:var(--subtle);margin:0 auto 20px}
+.mt{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:16px;letter-spacing:-.3px;display:flex;align-items:center;gap:8px}
+.ts{display:flex;gap:8px;margin-bottom:14px}
+.tsb{flex:1;padding:12px 8px;border-radius:12px;border:1px solid var(--edge);background:var(--surface);color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif;transition:all .15s;text-align:center}
+.tsb.ag{background:var(--plasma-dim);border-color:rgba(200,255,0,0.35);color:var(--plasma)}
+.tsb.ay{background:var(--amber-dim);border-color:rgba(255,159,10,0.35);color:var(--amber)}
+.tsb.ar{background:var(--fire-dim);border-color:rgba(255,77,28,0.35);color:var(--fire)}
+.psl{display:flex;flex-direction:column;gap:6px;max-height:50vh;overflow-y:auto}
+.pi{display:flex;align-items:center;gap:12px;padding:13px 14px;background:var(--surface);border-radius:14px;cursor:pointer;border:1.5px solid transparent;transition:all .15s}
+.pi:active{opacity:.7}
+.pi.sg{border-color:rgba(200,255,0,0.35);background:var(--plasma-dim)}
+.pi.sy{border-color:rgba(255,159,10,0.35);background:var(--amber-dim)}
+.pi.sr2{border-color:rgba(255,77,28,0.35);background:var(--fire-dim)}
+.pa{width:40px;height:40px;border-radius:50%;background:var(--lifted);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--muted);flex-shrink:0;font-family:'JetBrains Mono',monospace;border:1px solid var(--edge)}
+.pn{font-size:14px;font-weight:600;color:var(--white);flex:1}
+.pnum{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--subtle)}
+.pw{font-size:9px;color:var(--amber);font-family:'JetBrains Mono',monospace;margin-top:2px}
+.cb{width:100%;padding:16px;border-radius:14px;border:none;font-size:15px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif;margin-top:16px;transition:all .15s}
+.cb:active{transform:scale(.97)}
+.cg{background:var(--plasma);color:var(--void)}
+.cy{background:var(--amber);color:var(--void)}
+.cr{background:var(--fire);color:var(--white)}
+.cl{text-align:center;margin-top:12px;font-size:13px;color:var(--muted);cursor:pointer;padding:8px;font-weight:500}
+.toast{position:fixed;top:70px;left:50%;transform:translateX(-50%) translateY(-8px);background:var(--surface);border:1px solid rgba(200,255,0,0.3);color:var(--plasma);padding:10px 22px;border-radius:100px;font-size:12px;font-weight:700;z-index:300;opacity:0;transition:all .25s;white-space:nowrap;pointer-events:none;font-family:'JetBrains Mono',monospace;letter-spacing:.04em}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.ph{background:var(--surface);border:1px solid var(--edge);border-radius:18px;padding:22px;margin-bottom:14px;display:flex;align-items:center;gap:16px}
+.pha{width:58px;height:58px;border-radius:50%;background:var(--plasma-dim);border:2px solid rgba(200,255,0,0.3);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:var(--plasma);flex-shrink:0;font-family:'JetBrains Mono',monospace}
+.phn{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;letter-spacing:-.3px}
+.phr{font-size:11px;color:var(--muted);margin-top:3px}
+.bsm{background:linear-gradient(135deg,#d7ff52,#b7ff00);color:var(--void);border:none;border-radius:10px;padding:9px 14px;font-size:11px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif;transition:all .15s;box-shadow:0 10px 20px rgba(200,255,0,0.15)}
+.bsm:active{opacity:.8}
+.fgi{font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:7px;display:block;font-family:'JetBrains Mono',monospace}
+.ffi{width:100%;background:var(--lifted);border:1px solid var(--edge);border-radius:12px;padding:12px 16px;font-size:14px;color:var(--white);font-family:'Outfit',sans-serif;outline:none;transition:border-color .2s;margin-bottom:14px}
+.ffi:focus{border-color:rgba(200,255,0,0.4)}
+.ffs{width:100%;background:var(--lifted);border:1px solid var(--edge);border-radius:12px;padding:12px 16px;font-size:14px;color:var(--white);font-family:'Outfit',sans-serif;outline:none;appearance:none;margin-bottom:14px}
+.lov{position:fixed;inset:0;background:rgba(6,6,8,0.8);z-index:400;display:none;align-items:center;justify-content:center;flex-direction:column;gap:14px;backdrop-filter:blur(4px)}
+.lov.active{display:flex}
+.sp2{width:36px;height:36px;border:3px solid var(--edge);border-top-color:var(--plasma);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.lot{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
+</style>
+</head>
+<body>
+<div class="toast" id="toast"></div>
+<div class="lov" id="lov"><div class="sp2"></div><div class="lot">Cargando...</div></div>
+
+<div class="screen active" id="screen-login">
+  <div class="login-logo">SportFrame<span class="dot"></span></div>
+  <div class="login-sub">Plataforma deportiva · 2025</div>
+  <div class="login-card">
+    <div class="lc-title">Iniciar sesión</div>
+    <label class="fl">RUT (sin puntos, con guión)</label>
+    <input class="fi" type="text" id="le" placeholder="12345678-9" autocomplete="username">
+    <label class="fl">Clave</label>
+    <input class="fi" type="password" id="lp" placeholder="••••••••" onkeydown="if(event.key==='Enter')login()">
+    <button class="btn-p" onclick="login()" id="lb">Entrar →</button>
+    <button class="btn-s" onclick="openSetup()" id="setup-btn" style="display:none">Crear primer administrador</button>
+    <button class="btn-s" onclick="resumeSavedSession()" id="continue-btn" style="display:none">Continuar con sesión guardada</button>
+    <button class="btn-x" onclick="usarOtraCuenta()" id="switch-btn" style="display:none">Usar otra cuenta</button>
+    <div class="err" id="lerr"></div>
+    <div class="login-help" id="login-help">Usa un usuario ya creado en SportFrame para entrar.</div>
+  </div>
+</div>
+
+<div class="screen" id="screen-app">
+  <div class="top-bar">
+    <div class="tb-logo">SF<span class="dot" style="width:6px;height:6px"></span></div>
+    <div class="tb-role" id="rb">—</div>
+    <div class="tb-space"></div>
+    <div class="tb-av" id="av">—</div>
+  </div>
+  <div class="content" id="mc"></div>
+  <div class="bottom-nav" id="bn"></div>
+</div>
+
+<div class="mo" id="mo-p"><div class="ms"><div class="mh"></div><div class="mt" id="mo-t">⚽</div>
+  <div class="ts" id="mo-ts"><button class="tsb ag" onclick="selTeam('local',this)" id="ts-l">Local</button><button class="tsb" onclick="selTeam('visita',this)" id="ts-v">Visita</button></div>
+  <div class="psl" id="mo-pl"></div>
+  <button class="cb cg" id="mo-cb" onclick="confirmAct()">Confirmar</button>
+  <div class="cl" onclick="closeM('mo-p')">Cancelar</div>
+</div></div>
+
+<div class="mo" id="mo-e"><div class="ms"><div class="mh"></div><div class="mt">🏁 Finalizar partido</div>
+  <div style="background:var(--surface);border-radius:16px;padding:20px;text-align:center;margin-bottom:16px;border:1px solid var(--edge)">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:.06em">Resultado final</div>
+    <div style="font-family:'Syne',sans-serif;font-size:48px;font-weight:800;letter-spacing:5px" id="es">— — —</div>
+  </div>
+  <div style="font-size:12px;color:var(--muted);background:var(--surface);border-radius:12px;padding:14px;line-height:1.9;border:1px solid var(--edge)">Al confirmar, las tablas se actualizarán automáticamente y el resultado quedará publicado.</div>
+  <button class="cb cg" onclick="confirmEnd()">Publicar resultado →</button>
+  <div class="cl" onclick="closeM('mo-e')">Volver</div>
+</div></div>
+
+<div class="mo" id="mo-j"><div class="ms"><div class="mh"></div><div class="mt">👤 Inscribir jugador</div>
+  <label class="fgi">Nombre completo</label><input class="ffi" type="text" id="jn" placeholder="Juan Pérez González">
+  <label class="fgi">RUT (sin puntos, con guión)</label><input class="ffi" type="text" id="jr" placeholder="12345678-9">
+  <label class="fgi">Edad</label><input class="ffi" type="number" id="jedad" placeholder="23" min="10" max="60">
+  <label class="fgi">Fecha de nacimiento</label><input class="ffi" type="date" id="jfn">
+  <label class="fgi">Posición</label>
+  <select class="ffs" id="jp"><option>Arquero</option><option>Defensa</option><option>Mediocampista</option><option>Delantero</option></select>
+  <label class="fgi">Número de camiseta</label><input class="ffi" type="number" id="jnu" placeholder="10" min="1" max="99">
+  <label class="fgi">Teléfono jugador</label><input class="ffi" type="text" id="jtel" placeholder="+56 9 1234 5678">
+  <label class="fgi">Contacto de emergencia</label><input class="ffi" type="text" id="jce" placeholder="Nombre del apoderado o familiar">
+  <label class="fgi">Teléfono de emergencia</label><input class="ffi" type="text" id="jte" placeholder="+56 9 9876 5432">
+  <label class="fgi">Observaciones médicas</label><input class="ffi" type="text" id="jmed" placeholder="Alergias, medicamentos, etc.">
+  <label class="fgi">Crear cuenta de jugador (opcional)</label><input class="ffi" type="email" id="jmail" placeholder="jugador@correo.com">
+  <label class="fgi">Contraseña temporal (opcional)</label><input class="ffi" type="password" id="jpass" placeholder="Mínimo 6 caracteres">
+  <button class="cb cg" onclick="inscrJug()">Inscribir jugador</button>
+  <div class="cl" onclick="closeM('mo-j')">Cancelar</div>
+</div></div>
+
+<div class="mo" id="mo-eq"><div class="ms"><div class="mh"></div><div class="mt">⚽ Nuevo equipo</div>
+  <label class="fgi">Nombre del equipo</label><input class="ffi" type="text" id="eqn" placeholder="Los Cóndores">
+  <label class="fgi">Liga</label><select class="ffs" id="eql"><option value="">Sin liga</option></select>
+  <button class="cb cg" onclick="crearEquipo()">Crear equipo</button>
+  <div class="cl" onclick="closeM('mo-eq')">Cancelar</div>
+</div></div>
+
+<div class="mo" id="mo-pt"><div class="ms"><div class="mh"></div><div class="mt">🏁 Nuevo partido</div>
+  <label class="fgi">Liga</label><select class="ffs" id="ptlg"><option value="">Sin liga</option></select>
+  <label class="fgi">Equipo local</label><select class="ffs" id="ptl"></select>
+  <label class="fgi">Equipo visita</label><select class="ffs" id="ptv"></select>
+  <label class="fgi">Fecha y hora</label><input class="ffi" type="datetime-local" id="ptf">
+  <label class="fgi">Jornada</label><input class="ffi" type="number" id="ptj" value="1" min="1">
+  <label class="fgi">Árbitro asignado</label><select class="ffs" id="pta"><option value="">Sin árbitro</option></select>
+  <label class="fgi">Estado inicial</label><select class="ffs" id="pts"><option value="pendiente">Pendiente</option><option value="en_curso">En curso</option></select>
+  <button class="cb cg" onclick="crearPartido()">Guardar partido</button>
+  <div class="cl" onclick="closeM('mo-pt')">Cancelar</div>
+</div></div>
+
+<div class="mo" id="mo-su"><div class="ms"><div class="mh"></div><div class="mt">🚀 Crear administrador inicial</div>
+  <label class="fgi">Nombre completo</label><input class="ffi" type="text" id="sun" placeholder="Tu nombre completo">
+  <label class="fgi">Correo electrónico</label><input class="ffi" type="email" id="sue" placeholder="admin@sportframe.cl">
+  <label class="fgi">Contraseña</label><input class="ffi" type="password" id="sup" placeholder="Mínimo 6 caracteres">
+  <button class="cb cg" onclick="crearPrimerAdmin()">Crear administrador</button>
+  <div class="cl" onclick="closeM('mo-su')">Cancelar</div>
+</div></div>
+
+<div class="mo" id="mo-u"><div class="ms"><div class="mh"></div><div class="mt">👤 Nuevo usuario</div>
+  <label class="fgi">Nombre completo</label><input class="ffi" type="text" id="un" placeholder="Nombre y apellido">
+  <label class="fgi">Correo electrónico</label><input class="ffi" type="email" id="ue" placeholder="usuario@correo.com">
+  <label class="fgi">Contraseña temporal</label><input class="ffi" type="password" id="up" placeholder="Mínimo 6 caracteres">
+  <label class="fgi">Rol</label>
+  <select class="ffs" id="ur">
+    <option value="arbitro">Árbitro</option>
+    <option value="capitan">Capitán</option>
+    <option value="jugador">Jugador</option>
+    <option value="admin">Admin</option>
+  </select>
+  <label class="fgi">Equipo asignado (opcional)</label><select class="ffs" id="ut"><option value="">Sin equipo</option></select>
+  <button class="cb cg" onclick="crearUsuario()">Crear usuario</button>
+  <div class="cl" onclick="closeM('mo-u')">Cancelar</div>
+</div></div>
+
+<div class="mo" id="mo-lg"><div class="ms"><div class="mh"></div><div class="mt">🏆 Nueva liga</div>
+  <label class="fgi">Nombre de la liga</label><input class="ffi" type="text" id="lgn" placeholder="Liga SportFrame Apertura">
+  <label class="fgi">Temporada</label><input class="ffi" type="text" id="lgt" placeholder="Apertura 2025">
+  <label class="fgi">Estado</label>
+  <select class="ffs" id="lgs"><option value="activa">Activa</option><option value="borrador">Borrador</option><option value="cerrada">Cerrada</option></select>
+  <button class="cb cg" onclick="crearLiga()">Crear liga</button>
+  <div class="cl" onclick="closeM('mo-lg')">Cancelar</div>
+</div></div>
+
+<script>
+const SUPA_URL='https://xnmiugofbewcfgpggkwe.supabase.co';
+const SUPA_KEY='sb_publishable_ad3pNyA56DgBDtq0D7Dc8Q_ESN1lqr5';
+const {createClient}=supabase;
+const db=createClient(SUPA_URL,SUPA_KEY);
+
+let CU=null,CR=null,CT=0,MM='goal',ST='local',SP=null,CPT=null,PP={local:[],visita:[]},BOOTSTRAP=false,LIGAS_ENABLED=false,RELATIONAL_LIGAS=false,TEAM_STATUS_ENABLED=false,TEAM_MULTI_LIGA_ENABLED=false,ACTIVE_LIGA=null,LIGAS_CACHE=[],ADMIN_MATCH_ID=null,SELECTED_TEAM_ID=null,PLAYER_TEAM_CONTEXT=null,PLAYER_SEARCH_TERM='';
+let SAVED_USER=null;
+// ── Modo impersonación y flujo de fotos ──
+let VIEW_AS=null;
+let ONBOARD_STEP=null;
+let ONBOARD_PHOTOS={};
+let CAM_STREAM=null;
+function effectiveRole(){return VIEW_AS||CR;}
+function isImpersonating(){return CR==='admin'&&VIEW_AS!==null;}
+
+const CFG={
+  admin:{l:'Admin',b:'ra',a:'AD',tabs:[{i:'📊',l:'Panel'},{i:'⚽',l:'Liga'},{i:'👥',l:'Equipos'},{i:'👤',l:'Perfil'}]},
+  arbitro:{l:'Árbitro',b:'rar',a:'ÁR',tabs:[{i:'🏁',l:'Partido'},{i:'📋',l:'Historial'},{i:'👤',l:'Perfil'}]},
+  capitan:{l:'Capitán',b:'rc',a:'CA',tabs:[{i:'🏠',l:'Mi equipo'},{i:'⚽',l:'Liga'},{i:'📅',l:'Partidos'},{i:'👤',l:'Perfil'}]},
+  jugador:{l:'Jugador',b:'rj',a:'JU',tabs:[{i:'🏠',l:'Inicio'},{i:'⚽',l:'Liga'},{i:'📅',l:'Partidos'},{i:'👤',l:'Perfil'}]},
+};
+
+function toast(m,c='var(--plasma)'){const t=document.getElementById('toast');t.textContent=m;t.style.color=c;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2500)}
+function lov(s){document.getElementById('lov').classList.toggle('active',s)}
+function closeM(id){document.getElementById(id).classList.remove('active')}
+function ini(n){return n.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()}
+function vRut(r){r=r.replace(/\./g,'').replace(/-/g,'');if(r.length<8)return false;const dv=r.slice(-1).toUpperCase(),nums=r.slice(0,-1);let s=0,m=2;for(let i=nums.length-1;i>=0;i--){s+=parseInt(nums[i])*m;m=m===7?2:m+1}const res=11-(s%11),dc=res===11?'0':res===10?'K':String(res);return dv===dc}
+function setErr(msg=''){const err=document.getElementById('lerr');err.textContent=msg;err.style.display=msg?'block':'none'}
+function openSetup(){document.getElementById('mo-su').classList.add('active')}
+function showSavedSession(user){
+  SAVED_USER=user;
+  document.getElementById('continue-btn').style.display='block';
+  document.getElementById('switch-btn').style.display='block';
+  document.getElementById('login-help').innerHTML=`Sesión detectada: <strong>${user.nombre}</strong> (${user.rol}). Puedes continuar o cambiar de cuenta.`;
+}
+async function resumeSavedSession(){
+  if(!SAVED_USER){toast('No hay sesión guardada','var(--fire)');return}
+  CU=SAVED_USER;CR=SAVED_USER.rol;
+  await initApp();
+}
+async function usarOtraCuenta(){
+  await db.auth.signOut();
+  SAVED_USER=null;
+  document.getElementById('continue-btn').style.display='none';
+  document.getElementById('switch-btn').style.display='none';
+  document.getElementById('login-help').textContent='Usa un usuario ya creado en SportFrame para entrar.';
+  setErr('');
+  toast('Sesión cerrada. Ahora puedes entrar con otra cuenta.');
+}
+function currentTemporada(){return ACTIVE_LIGA?.temporada||'Apertura 2025'}
+function ligaDisplay(){return ACTIVE_LIGA?`${ACTIVE_LIGA.nombre} · ${ACTIVE_LIGA.temporada}`:currentTemporada()}
+function hasActiveLiga(){return !!(LIGAS_ENABLED&&ACTIVE_LIGA)}
+function activeLigaLabel(){return hasActiveLiga()?`${ACTIVE_LIGA.nombre} · ${ACTIVE_LIGA.temporada}`:currentTemporada()}
+function applyLigaFilter(query){
+  if(hasActiveLiga()&&RELATIONAL_LIGAS&&ACTIVE_LIGA?.id)return query.eq('liga_id',ACTIVE_LIGA.id);
+  if(ACTIVE_LIGA?.temporada)return query.eq('temporada',ACTIVE_LIGA.temporada);
+  return query;
+}
+function activeTeamsOnly(query){
+  return TEAM_STATUS_ENABLED?query.neq('estado','eliminado'):query;
+}
+function ligaPayload(extra={}){
+  const payload={...extra};
+  if(ACTIVE_LIGA?.temporada&&!payload.temporada)payload.temporada=ACTIVE_LIGA.temporada;
+  if(RELATIONAL_LIGAS&&ACTIVE_LIGA?.id)payload.liga_id=ACTIVE_LIGA.id;
+  return payload;
+}
+function matchContext(match){
+  if(match?.liga?.nombre)return `${match.liga.nombre} · ${match.liga.temporada||match.temporada||'Temporada activa'}`;
+  if(ACTIVE_LIGA?.id&&match?.liga_id===ACTIVE_LIGA.id)return activeLigaLabel();
+  return match?.temporada||activeLigaLabel();
+}
+
+async function checkBootstrap(){
+  try{
+    const{count,error}=await db.from('usuarios').select('*',{count:'exact',head:true});
+    if(error)throw error;
+    BOOTSTRAP=(count||0)===0;
+    document.getElementById('setup-btn').style.display=BOOTSTRAP?'block':'none';
+    document.getElementById('login-help').innerHTML=BOOTSTRAP
+      ? 'La base está vacía. <strong>Crea el primer administrador</strong> para empezar a cargar equipos, usuarios y partidos.'
+      : 'Usa un usuario ya creado en SportFrame para entrar.';
+  }catch(e){
+    document.getElementById('login-help').textContent='No pude verificar la base todavía. Igual puedes intentar entrar.';
+  }
+}
+
+async function checkLigas(){
+  try{
+    const {data,error}=await db.from('ligas').select('*').order('created_at',{ascending:false});
+    if(error)throw error;
+    LIGAS_ENABLED=true;
+    LIGAS_CACHE=data||[];
+    const savedId=localStorage.getItem('sportframe_active_liga');
+    ACTIVE_LIGA=LIGAS_CACHE.find(l=>l.id===savedId)||LIGAS_CACHE.find(l=>l.estado==='activa')||LIGAS_CACHE[0]||null;
+    syncLigaSelects();
+  }catch(e){
+    LIGAS_ENABLED=false;
+    LIGAS_CACHE=[];
+    ACTIVE_LIGA=null;
+    syncLigaSelects();
+  }
+}
+
+async function checkLigaRelations(){
+  if(!LIGAS_ENABLED){RELATIONAL_LIGAS=false;return}
+  try{
+    const [{error:eqErr},{error:ptErr}] = await Promise.all([
+      db.from('equipos').select('liga_id').limit(1),
+      db.from('partidos').select('liga_id').limit(1)
+    ]);
+    RELATIONAL_LIGAS=!eqErr&&!ptErr;
+  }catch(e){
+    RELATIONAL_LIGAS=false;
+  }
+}
+
+async function checkTeamStatusSupport(){
+  try{
+    const {error}=await db.from('equipos').select('estado').limit(1);
+    TEAM_STATUS_ENABLED=!error;
+  }catch(e){
+    TEAM_STATUS_ENABLED=false;
+  }
+}
+
+async function checkTeamMultiLigaSupport(){
+  try{
+    const {error}=await db.from('equipo_ligas').select('equipo_id').limit(1);
+    TEAM_MULTI_LIGA_ENABLED=!error;
+  }catch(e){
+    TEAM_MULTI_LIGA_ENABLED=false;
+  }
+}
+
+async function getActiveLeagueTeamIds(liga=ACTIVE_LIGA){
+  if(!liga)return [];
+  if(TEAM_MULTI_LIGA_ENABLED){
+    const {data,error}=await db.from('equipo_ligas').select('equipo_id').eq('liga_id',liga.id);
+    if(error)throw error;
+    return [...new Set((data||[]).map(r=>r.equipo_id).filter(Boolean))];
+  }
+  const query=RELATIONAL_LIGAS&&liga.id
+    ? db.from('equipos').select('id').eq('liga_id',liga.id)
+    : db.from('equipos').select('id').eq('temporada',liga.temporada||currentTemporada());
+  const {data,error}=await query;
+  if(error)throw error;
+  return (data||[]).map(r=>r.id);
+}
+
+async function loadLeagueTeams(liga=ACTIVE_LIGA,fields='*'){
+  const teamIds=await getActiveLeagueTeamIds(liga);
+  if(!teamIds.length)return [];
+  const {data,error}=await activeTeamsOnly(db.from('equipos').select(fields).in('id',teamIds).order('nombre'));
+  if(error)throw error;
+  return data||[];
+}
+
+function syncLigaSelects(){
+  const options=LIGAS_ENABLED
+    ? `<option value="">${ACTIVE_LIGA?'Usar liga activa':'Sin liga seleccionada'}</option>${LIGAS_CACHE.map(l=>`<option value="${l.id}" ${ACTIVE_LIGA?.id===l.id?'selected':''}>${l.nombre} · ${l.temporada}</option>`).join('')}`
+    : '<option value="">Sin tabla de ligas</option>';
+  ['eql','ptlg'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el)el.innerHTML=options;
+  });
+}
+
+function selectedLigaById(id){
+  return LIGAS_CACHE.find(l=>l.id===id)||ACTIVE_LIGA||null;
+}
+
+function formatFecha(raw){
+  if(!raw)return 'Sin fecha';
+  try{return new Intl.DateTimeFormat('es-CL',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}).format(new Date(raw));}
+  catch{return raw;}
+}
+
+async function signUpAndStoreProfile({nombre,email,password,rol,equipo_id='',rut=''}){
+  const prevSession=(await db.auth.getSession()).data.session;
+  const normalizedEmail=email.toLowerCase();
+  const payload={email:normalizedEmail,password,options:{data:{nombre,rol}}};
+  const {data, error}=await db.auth.signUp(payload);
+  if(error)throw error;
+  const userId=data.user?.id;
+  const profilePayload={id:userId,email:normalizedEmail,nombre,rol,equipo_id:equipo_id||null};
+  if(rut)profilePayload.rut=rut;
+  const {error:profileError}=await db.from('usuarios').upsert(profilePayload,{onConflict:'email'});
+  if(profileError)throw profileError;
+  if(prevSession?.access_token&&prevSession?.refresh_token){
+    await db.auth.setSession({
+      access_token:prevSession.access_token,
+      refresh_token:prevSession.refresh_token
+    });
+  }
+  return data;
+}
+
+async function crearPrimerAdmin(){
+  const nombre=document.getElementById('sun').value.trim();
+  const email=document.getElementById('sue').value.trim();
+  const password=document.getElementById('sup').value;
+  if(!nombre||!email||password.length<6){toast('Completa nombre, correo y una contraseña de 6+ caracteres','var(--fire)');return}
+  lov(true);
+  try{
+    const data=await signUpAndStoreProfile({nombre,email,password,rol:'admin'});
+    closeM('mo-su');
+    document.getElementById('le').value=email;
+    document.getElementById('lp').value=password;
+    if(data.session){
+      const {data:u}=await db.from('usuarios').select('*').eq('email',email.toLowerCase()).single();
+      CU=u;CR='admin';
+      await initApp();
+      toast('✅ Administrador creado');
+    }else{
+      setErr('Administrador creado. Si Supabase exige confirmación de correo, confirma el email antes de entrar.');
+    }
+    await checkBootstrap();
+  }catch(e){
+    toast(e.message.includes('already')||e.message.includes('registered')?'Ese correo ya existe':'Error: '+e.message,'var(--fire)');
+  }
+  lov(false);
+}
+
+async function crearLiga(){
+  const nombre=document.getElementById('lgn').value.trim();
+  const temporada=document.getElementById('lgt').value.trim();
+  const estado=document.getElementById('lgs').value;
+  if(!nombre||!temporada){toast('Completa nombre y temporada de la liga','var(--fire)');return}
+  if(!LIGAS_ENABLED){toast('Primero crea la tabla ligas en Supabase','var(--fire)');return}
+  lov(true);
+  try{
+    const {error}=await db.from('ligas').insert({nombre,temporada,estado});
+    if(error)throw error;
+    closeM('mo-lg');
+    await checkLigas();
+    await renderContent();
+    toast('✅ Liga creada');
+  }catch(e){
+    toast('Error: '+e.message,'var(--fire)');
+  }
+  lov(false);
+}
+
+async function seleccionarLiga(id){
+  ACTIVE_LIGA=LIGAS_CACHE.find(l=>l.id===id)||ACTIVE_LIGA;
+  if(ACTIVE_LIGA?.id)localStorage.setItem('sportframe_active_liga',ACTIVE_LIGA.id);
+  syncLigaSelects();
+  await renderContent();
+  toast(`🏆 Liga activa: ${ACTIVE_LIGA?.nombre||currentTemporada()}`);
+}
+
+// ── Convierte RUT a email interno ──
+function rutToEmail(rut){
+  const clean=rut.replace(/\./g,'').replace(/-/g,'').toLowerCase();
+  return clean+'@sportframe.cl';
+}
+
+async function login(){
+  const rutRaw=document.getElementById('le').value.trim();
+  const p=document.getElementById('lp').value;
+  if(!rutRaw||!p){setErr('Ingresa tu RUT y clave');return}
+  setErr('');
+  document.getElementById('lb').disabled=true;
+  lov(true);
+  try{
+    // Intentar login por RUT (email interno) o email real
+    const emailToTry=rutRaw.includes('@')?rutRaw:rutToEmail(rutRaw);
+    const{data,error}=await db.auth.signInWithPassword({email:emailToTry,password:p});
+    if(error)throw error;
+    // Buscar perfil por email o por rut
+    let u=null;
+    const{data:byEmail}=await db.from('usuarios').select('*').eq('email',emailToTry).single();
+    if(byEmail){u=byEmail;}
+    else{
+      const{data:byRut}=await db.from('usuarios').select('*').eq('rut',rutRaw).single();
+      u=byRut;
+    }
+    if(!u)throw new Error('Usuario no encontrado en el sistema');
+    CU=u;CR=u.rol;
+    // Verificar si necesita onboarding de fotos (capitán/jugador primera vez)
+    if((CR==='capitan'||CR==='jugador')&&!u.verificado&&!u.foto_selfie_url){
+      await startOnboarding();
+    } else {
+      await initApp();
+    }
+  }catch(ex){
+    setErr(ex.message.includes('Invalid')?'RUT o clave incorrectos':ex.message);
+  }finally{lov(false);document.getElementById('lb').disabled=false}
+}
+
+async function initApp(){
+  await checkLigas();
+  await checkLigaRelations();
+  await checkTeamStatusSupport();
+  await checkTeamMultiLigaSupport();
+  const cfg=CFG[CR];
+  const cfg2=CFG[effectiveRole()];
+  document.getElementById('rb').textContent=isImpersonating()?`${cfg2.l} (admin)`:cfg2.l;
+  document.getElementById('rb').className='tb-role '+cfg2.b;
+  document.getElementById('av').textContent=ini(CU.nombre);
+  CT=0;renderNav();await renderContent();
+  document.getElementById('screen-login').classList.remove('active');
+  document.getElementById('screen-app').classList.add('active');
+}
+
+function renderNav(){
+  const tabs=CFG[effectiveRole()].tabs;
+  document.getElementById('bn').innerHTML=tabs.map((t,i)=>`<div class="nav-item ${i===CT?'active':''}" onclick="switchTab(${i})"><div class="ni">${t.i}</div><div class="nl">${t.l}</div></div>`).join('');
+}
+
+async function switchTab(i){CT=i;renderNav();await renderContent()}
+
+async function renderContent(){
+  lov(true);
+  try{
+    const c=document.getElementById('mc');
+    const er=effectiveRole();
+    if(er==='admin')c.innerHTML=await rAdmin();
+    else if(er==='arbitro')c.innerHTML=await rArbitro();
+    else if(er==='capitan')c.innerHTML=await rCapitan();
+    else c.innerHTML=await rJugador();
+  }catch(e){toast('Error: '+e.message,'var(--fire)')}
+  lov(false);
+}
+
+async function loadLigaData(){
+  const teamIds=await getActiveLeagueTeamIds();
+  const equiposQuery=teamIds.length?activeTeamsOnly(db.from('equipos').select('id,nombre,temporada,liga_id,estado').in('id',teamIds).order('nombre')):Promise.resolve({data:[]});
+  const partidosQuery=hasActiveLiga()?applyLigaFilter(db.from('partidos').select('id,equipo_local_id,equipo_visita_id,goles_local,goles_visita,estado,temporada,liga_id')):Promise.resolve({data:[]});
+  const [{data:equipos,error:eqErr},{data:partidos,error:ptErr},{data:eventos,error:evErr},{data:jugadores,error:juErr}] = await Promise.all([
+    equiposQuery,
+    partidosQuery,
+    db.from('eventos').select('id,partido_id,jugador_id,tipo,equipo_id'),
+    teamIds.length?db.from('jugadores').select('id,nombre,equipo_id,posicion').in('equipo_id',teamIds):Promise.resolve({data:[]})
+  ]);
+  if(eqErr||ptErr||evErr||juErr)throw (eqErr||ptErr||evErr||juErr);
+  return {equipos:equipos||[],partidos:partidos||[],eventos:eventos||[],jugadores:jugadores||[]};
+}
+
+async function getPos(){
+  const {equipos,partidos}=await loadLigaData();
+  const map=new Map(equipos.map(e=>[e.id,{id:e.id,nombre:e.nombre,pj:0,pg:0,pe:0,pp:0,gf:0,gc:0,pts:0}]));
+  partidos.filter(p=>p.estado==='finalizado').forEach(p=>{
+    const l=map.get(p.equipo_local_id),v=map.get(p.equipo_visita_id);
+    if(!l||!v)return;
+    const gl=Number(p.goles_local||0),gv=Number(p.goles_visita||0);
+    l.pj++;v.pj++;l.gf+=gl;l.gc+=gv;v.gf+=gv;v.gc+=gl;
+    if(gl>gv){l.pg++;l.pts+=3;v.pp++;}
+    else if(gv>gl){v.pg++;v.pts+=3;l.pp++;}
+    else{l.pe++;v.pe++;l.pts++;v.pts++;}
+  });
+  return [...map.values()].sort((a,b)=>(b.pts-a.pts)||((b.gf-b.gc)-(a.gf-a.gc))||(b.gf-a.gf)||a.nombre.localeCompare(b.nombre));
+}
+
+async function getGoles(){
+  const {equipos,eventos,jugadores}=await loadLigaData();
+  const equiposMap=new Map(equipos.map(e=>[e.id,e.nombre]));
+  const jugadoresMap=new Map(jugadores.map(j=>[j.id,j]));
+  const goles=new Map();
+  eventos.filter(e=>e.tipo==='gol').forEach(e=>{
+    const j=jugadoresMap.get(e.jugador_id);
+    const key=e.jugador_id||j?.nombre;
+    if(!key)return;
+    const cur=goles.get(key)||{nombre:j?.nombre||'Jugador',equipo:equiposMap.get(e.equipo_id||j?.equipo_id)||'Sin equipo',goles:0};
+    cur.goles++;
+    goles.set(key,cur);
+  });
+  return [...goles.values()].sort((a,b)=>(b.goles-a.goles)||a.nombre.localeCompare(b.nombre));
+}
+
+function tblHTML(rows){
+  if(!rows.length)return'<div style="padding:20px;text-align:center;font-size:12px;color:var(--muted)">Sin datos aún</div>';
+  return`<table class="tbl"><thead><tr><th>#</th><th>Equipo</th><th>PJ</th><th>PG</th><th>PE</th><th>PP</th><th>GF</th><th>GC</th><th>Pts</th></tr></thead><tbody>${rows.map((r,i)=>`<tr ${i===0?'class="ldr"':''}><td style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--subtle)">${i+1}</td><td class="tn">${i===0?'⭐ ':''}${r.nombre}</td><td>${r.pj||0}</td><td>${r.pg||0}</td><td>${r.pe||0}</td><td>${r.pp||0}</td><td>${r.gf||0}</td><td>${r.gc||0}</td><td class="tp">${r.pts||0}</td></tr>`).join('')}</tbody></table>`;
+}
+
+function golesHTML(rows){
+  if(!rows.length)return'<div style="padding:20px;text-align:center;font-size:12px;color:var(--muted)">Sin goles aún</div>';
+  return rows.map((p,i)=>`<div class="sr"><div class="srk ${i===0?'top':''}">${i+1}</div><div class="sav ${i===0?'top':''}">${ini(p.nombre)}</div><div class="si"><div class="sn">${p.nombre}</div><div class="st">${p.equipo}</div></div><div class="sg">${p.goles} ⚽</div></div>`).join('');
+}
+
+async function ligaHTML(){
+  const[pos,goles]=await Promise.all([getPos(),getGoles()]);
+  return`<div class="card"><div class="ch"><span class="ct">Posiciones</span><div class="lp"><div class="ld"></div>En vivo</div></div>${tblHTML(pos)}</div><div class="card"><div class="ch"><span class="ct">Goleadores</span></div>${golesHTML(goles)}</div>`;
+}
+
+async function fetchPartidoById(id){
+  const query=applyLigaFilter(db.from('partidos').select('*,el:equipos!partidos_equipo_local_id_fkey(id,nombre),ev:equipos!partidos_equipo_visita_id_fkey(id,nombre),ar:usuarios!partidos_arbitro_id_fkey(nombre),liga:ligas(id,nombre,temporada,estado)')).eq('id',id).single();
+  const {data,error}=await query;
+  if(error)throw error;
+  return data;
+}
+
+async function hydrateControlMatch(match){
+  CPT=match;
+  document.getElementById('ts-l').textContent=CPT.el?.nombre||'Local';
+  document.getElementById('ts-v').textContent=CPT.ev?.nombre||'Visita';
+  const[{data:jugL},{data:jugV},{data:evs}] = await Promise.all([
+    db.from('jugadores').select('*').eq('equipo_id',CPT.el.id).eq('estado','habilitado').order('nombre'),
+    db.from('jugadores').select('*').eq('equipo_id',CPT.ev.id).eq('estado','habilitado').order('nombre'),
+    db.from('eventos').select('*,jugadores(nombre)').eq('partido_id',CPT.id).order('minuto')
+  ]);
+  PP.local=jugL||[];
+  PP.visita=jugV||[];
+  return evs||[];
+}
+
+async function renderMatchControl(match,actorLabel='Control operativo'){
+  const evs=await hydrateControlMatch(match);
+  const evHTML=evs.length?evs.map(e=>`<div class="ev"><span class="em">${e.minuto}'</span><span>${e.tipo==='gol'?'⚽':e.tipo==='amarilla'?'🟨':'🟥'}</span><span>${e.jugadores?.nombre||'—'}</span></div>`).join(''):'<div style="font-size:12px;color:var(--muted);padding:8px 14px">Sin eventos aún</div>';
+  const actions=match.estado==='finalizado'
+    ? `<div class="card" style="padding:16px;font-size:12px;color:var(--muted);line-height:1.7">Este partido ya está finalizado. Puedes revisar el detalle o ajustar el resultado desde la lista de partidos.</div>`
+    : `<div class="ag"><div class="ab bg" onclick="openM('goal')"><span class="abi">⚽</span><span class="abl">Gol</span></div><div class="ab by" onclick="openM('yellow')"><span class="abi">🟨</span><span class="abl">Amarilla</span></div><div class="ab br" onclick="openM('red')"><span class="abi">🟥</span><span class="abl">Roja</span></div><div class="ab" onclick="abrirFin()"><span class="abi" style="font-size:24px">🏁</span><span class="abl">Finalizar</span></div></div>`;
+  return`<div class="asc"><div class="asct"><span class="ascj">${actorLabel} · J${match.jornada||1} · ${matchContext(match)}</span><div class="lp"><div class="ld"></div>${match.estado==='finalizado'?'Finalizado':'En curso'}</div></div><div class="ascr"><span class="ascrn">${match.el?.nombre||'—'}</span><div><div class="ascrs">${match.goles_local??0} — ${match.goles_visita??0}</div><div class="ascrm">${formatFecha(match.fecha)}</div></div><span class="ascrn r">${match.ev?.nombre||'—'}</span></div></div>${actions}<div class="card"><div class="ch"><span class="ct">Eventos · ${evs.length}</span>${CR==='admin'?'<button class="bsm" onclick="cerrarControlAdmin()">Volver</button>':''}</div><div style="padding:8px 0">${evHTML}</div></div></div>`;
+}
+
+async function abrirControlPartido(id){
+  try{
+    const match=await fetchPartidoById(id);
+    ADMIN_MATCH_ID=match.id;
+    await renderContent();
+    toast(`🎯 Controlando ${match.el?.nombre||'—'} vs ${match.ev?.nombre||'—'}`);
+  }catch(e){
+    toast('Error: '+e.message,'var(--fire)');
+  }
+}
+
+function cerrarControlAdmin(){
+  ADMIN_MATCH_ID=null;
+  CPT=null;
+  renderContent();
+}
+
+async function loadSelectedTeamDetail(){
+  if(!SELECTED_TEAM_ID)return null;
+  const [{data:team,error:teamError},{data:players,error:playersError},{data:matches,error:matchesError}] = await Promise.all([
+    db.from('equipos').select('*').eq('id',SELECTED_TEAM_ID).single(),
+    db.from('jugadores').select('*').eq('equipo_id',SELECTED_TEAM_ID).order('nombre'),
+    db.from('partidos').select('id,estado,equipo_local_id,equipo_visita_id,goles_local,goles_visita,jornada,fecha,el:equipos!partidos_equipo_local_id_fkey(nombre),ev:equipos!partidos_equipo_visita_id_fkey(nombre)').or(`equipo_local_id.eq.${SELECTED_TEAM_ID},equipo_visita_id.eq.${SELECTED_TEAM_ID}`).order('fecha',{ascending:false,nullsFirst:false}).limit(8)
+  ]);
+  const error=teamError||playersError||matchesError;
+  if(error)throw error;
+  if(!team){SELECTED_TEAM_ID=null;return null}
+  return {team,players:players||[],matches:matches||[]};
+}
+
+async function seleccionarEquipo(id){
+  SELECTED_TEAM_ID=id;
+  await renderContent();
+}
+
+function limpiarEquipoSeleccionado(){
+  SELECTED_TEAM_ID=null;
+  renderContent();
+}
+function setPlayerSearchTerm(value){
+  PLAYER_SEARCH_TERM=value.trim().toLowerCase();
+  renderContent();
+}
+
+async function abrirAltaJugador(teamId=null){
+  const targetTeamId=teamId||CU?.equipo_id||PLAYER_TEAM_CONTEXT;
+  if(!targetTeamId){toast('Primero selecciona un equipo','var(--fire)');return}
+  PLAYER_TEAM_CONTEXT=targetTeamId;
+  const {count}=await db.from('jugadores').select('id',{count:'exact',head:true}).eq('equipo_id',targetTeamId);
+  if((count||0)>=16){toast('Máximo 16 jugadores por equipo en fútbol 8','var(--fire)');return}
+  ['jn','jr','jedad','jfn','jnu','jtel','jce','jte','jmed','jmail','jpass'].forEach(id=>{const el=document.getElementById(id); if(el)el.value='';});
+  document.getElementById('jp').value='Arquero';
+  document.getElementById('mo-j').classList.add('active');
+}
+
+async function eliminarLiga(id,nombre){
+  if(!confirm(`¿Eliminar la liga ${nombre}? Solo se puede si no tiene equipos ni partidos.`))return;
+  lov(true);
+  try{
+    const liga=LIGAS_CACHE.find(l=>l.id===id);
+    const ligaTeamsQuery=RELATIONAL_LIGAS
+      ? db.from('equipos').select('id',{count:'exact',head:true}).eq('liga_id',id)
+      : db.from('equipos').select('id',{count:'exact',head:true}).eq('temporada',liga?.temporada||'');
+    const ligaMatchesQuery=RELATIONAL_LIGAS
+      ? db.from('partidos').select('id',{count:'exact',head:true}).eq('liga_id',id)
+      : db.from('partidos').select('id',{count:'exact',head:true}).eq('temporada',liga?.temporada||'');
+    const [{count:teamCount},{count:matchCount}] = await Promise.all([ligaTeamsQuery,ligaMatchesQuery]);
+    if((teamCount||0)>0||(matchCount||0)>0)throw new Error('Primero elimina o mueve sus equipos y partidos.');
+    const {error}=await db.from('ligas').delete().eq('id',id);
+    if(error)throw error;
+    if(ACTIVE_LIGA?.id===id)ACTIVE_LIGA=null;
+    await checkLigas();
+    await checkLigaRelations();
+    toast('🗑️ Liga eliminada');
+    await renderContent();
+  }catch(e){
+    toast('Error: '+e.message,'var(--fire)');
+  }
+  lov(false);
+}
+
+async function cambiarEstadoLiga(id,estado){
+  const label=estado==='activa'?'activar':estado==='cerrada'?'cerrar':'pasar a borrador';
+  if(!confirm(`¿Quieres ${label} esta liga?`))return;
+  lov(true);
+  try{
+    const payload={estado};
+    const {error}=await db.from('ligas').update(payload).eq('id',id);
+    if(error)throw error;
+    await checkLigas();
+    toast(`✅ Liga ${label}da`);
+    await renderContent();
+  }catch(e){
+    toast('Error: '+e.message,'var(--fire)');
+  }
+  lov(false);
+}
+
+async function eliminarEquipo(id,nombre){
+  if(!confirm(`¿Eliminar o expulsar el equipo ${nombre}? Si tiene historial, se marcará como eliminado sin borrar partidos.`))return;
+  lov(true);
+  try{
+    const [{count:playerCount},{count:matchCount}] = await Promise.all([
+      db.from('jugadores').select('id',{count:'exact',head:true}).eq('equipo_id',id),
+      db.from('partidos').select('id',{count:'exact',head:true}).or(`equipo_local_id.eq.${id},equipo_visita_id.eq.${id}`)
+    ]);
+    let error=null;
+    if((playerCount||0)===0&&(matchCount||0)===0){
+      ({error}=await db.from('equipos').delete().eq('id',id));
+    }else if(TEAM_STATUS_ENABLED){
+      await db.from('usuarios').update({equipo_id:null}).eq('equipo_id',id);
+      await db.from('jugadores').update({estado:'suspendido'}).eq('equipo_id',id);
+      ({error}=await db.from('equipos').update({estado:'eliminado'}).eq('id',id));
+    }else{
+      throw new Error('Ejecuta el SQL de estados de equipos para expulsarlo sin perder historial.');
+    }
+    if(error)throw error;
+    if(SELECTED_TEAM_ID===id)SELECTED_TEAM_ID=null;
+    toast((playerCount||0)||(matchCount||0)?'🚫 Equipo expulsado y ocultado del operativo':'🗑️ Equipo eliminado');
+    await renderContent();
+  }catch(e){
+    toast('Error: '+e.message,'var(--fire)');
+  }
+  lov(false);
+}
+
+async function restaurarEquipo(id,nombre){
+  if(!TEAM_STATUS_ENABLED){toast('Falta habilitar estados de equipos en SQL','var(--fire)');return}
+  if(!confirm(`¿Restaurar el equipo ${nombre}?`))return;
+  lov(true);
+  try{
+    const {error}=await db.from('equipos').update({estado:'activo'}).eq('id',id);
+    if(error)throw error;
+    toast('✅ Equipo restaurado');
+    await renderContent();
+  }catch(e){
+    toast('Error: '+e.message,'var(--fire)');
+  }
+  lov(false);
+}
+
+async function vincularEquipoALiga(id,nombre,ligaId=null){
+  if(!TEAM_MULTI_LIGA_ENABLED){toast('Corre el SQL de equipo_ligas para usar múltiples ligas','var(--fire)');return}
+  const targetLiga=ligaId||ACTIVE_LIGA?.id;
+  if(!targetLiga){toast('Selecciona una liga primero','var(--fire)');return}
+  lov(true);
+  try{
+    const {error}=await db.from('equipo_ligas').insert({equipo_id:id,liga_id:targetLiga});
+    if(error&& !String(error.message).includes('duplicate'))throw error;
+    toast(`✅ ${nombre} ahora también juega esta liga`);
+    await renderContent();
+  }catch(e){
+    toast('Error: '+e.message,'var(--fire)');
+  }
+  lov(false);
+}
+
+async function eliminarJugador(id,nombre){
+  if(!confirm(`¿Eliminar a ${nombre}? Esto borrará también sus eventos registrados.`))return;
+  lov(true);
+  try{
+    await db.from('eventos').delete().eq('jugador_id',id);
+    const {error}=await db.from('jugadores').delete().eq('id',id);
+    if(error)throw error;
+    toast('🗑️ Jugador eliminado');
+    await renderContent();
+  }catch(e){
+    toast('Error: '+e.message,'var(--fire)');
+  }
+  lov(false);
+}
+
+async function crearCuentasDemo(){
+  const DEMO_PASS='SportFrame123!';
+  lov(true);
+  try{
+    const {data:teams}=await activeTeamsOnly(applyLigaFilter(db.from('equipos').select('id,nombre').order('nombre').limit(1)));
+    const team=teams?.[0];
+    if(!team)throw new Error('Primero crea al menos un equipo activo en la liga seleccionada.');
+    const demos=[
+      {nombre:'Demo Arbitro SportFrame',email:'demo.arbitro@sportframe.cl',rol:'arbitro',equipo_id:''},
+      {nombre:'Demo Capitan SportFrame',email:'demo.capitan@sportframe.cl',rol:'capitan',equipo_id:team.id},
+      {nombre:'Demo Jugador SportFrame',email:'demo.jugador@sportframe.cl',rol:'jugador',equipo_id:team.id}
+    ];
+    for(const demo of demos){
+      const {data:existing}=await db.from('usuarios').select('id,email').eq('email',demo.email).maybeSingle();
+      if(!existing){
+        await signUpAndStoreProfile({...demo,password:DEMO_PASS});
+      }
+    }
+    const {data:jug}=await db.from('jugadores').select('id').eq('rut','11111111-1').maybeSingle();
+    if(!jug){
+      await db.from('jugadores').insert({nombre:'Demo Jugador SportFrame',rut:'11111111-1',equipo_id:team.id,posicion:'Mediocampista',numero:10,estado:'habilitado'});
+    }
+    toast('✅ Demos listos: árbitro, capitán y jugador · clave SportFrame123!');
+    await renderContent();
+  }catch(e){
+    toast('Error: '+e.message,'var(--fire)');
+  }
+  lov(false);
+}
+
+async function rAdmin(){
+  if(CT===0){
+    const[{count:nE},{count:nJ},{count:nU},{data:pV},{data:users},{data:userTeams}]=await Promise.all([
+      activeTeamsOnly(applyLigaFilter(db.from('equipos').select('*',{count:'exact',head:true}))),
+      db.from('jugadores').select('*',{count:'exact',head:true}),
+      db.from('usuarios').select('*',{count:'exact',head:true}),
+      applyLigaFilter(db.from('partidos').select('*,el:equipos!partidos_equipo_local_id_fkey(nombre),ev:equipos!partidos_equipo_visita_id_fkey(nombre)').eq('estado','en_curso')),
+      db.from('usuarios').select('nombre,email,rol,equipo_id').order('created_at',{ascending:false}).limit(5),
+      activeTeamsOnly(applyLigaFilter(db.from('equipos').select('id,nombre')))
+    ]);
+    const{data:pend}=await db.from('jugadores').select('*,equipos(nombre)').eq('estado','pendiente').limit(5);
+    let pvHTML='',pHTML='',uHTML='';
+    const userTeamsMap=new Map((userTeams||[]).map(t=>[t.id,t.nombre]));
+    if(pV?.length){const p=pV[0];pvHTML=`<div class="card"><div class="ch"><span class="ct">En vivo</span><div class="lp"><div class="ld"></div>En vivo</div></div><div style="padding:16px"><div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:13px;font-weight:700">${p.el?.nombre||'—'}</span><span style="font-family:'Syne',sans-serif;font-size:32px;font-weight:800;color:var(--plasma)">${p.goles_local} — ${p.goles_visita}</span><span style="font-size:13px;font-weight:700">${p.ev?.nombre||'—'}</span></div></div></div>`}
+    if(pend?.length){pHTML=`<div class="card"><div class="ch"><span class="ct">Pendientes aprobación</span></div>${pend.map(j=>`<div class="li" onclick="aprobar('${j.id}','${j.nombre}')"><div class="lic" style="background:var(--plasma-dim)">👤</div><div class="lii"><div class="lit">${j.nombre}</div><div class="lis">${j.equipos?.nombre||'—'} · ${j.rut}</div></div><span style="font-size:11px;color:var(--plasma);font-weight:700;font-family:'JetBrains Mono',monospace">APROBAR</span></div>`).join('')}</div>`}
+    uHTML=`<div class="card"><div class="ch"><span class="ct">Usuarios</span><button class="bsm" onclick="abrirNuevoUsuario()">+ Usuario</button></div>${users?.length?users.map(u=>`<div class="li"><div class="lic">👤</div><div class="lii"><div class="lit">${u.nombre}</div><div class="lis">${u.email} · ${u.rol}${u.equipo_id&&userTeamsMap.get(u.equipo_id)?` · ${userTeamsMap.get(u.equipo_id)}`:''}</div></div></div>`).join(''):'<div style="padding:20px;text-align:center;font-size:12px;color:var(--muted)">Sin usuarios aún</div>'}</div>`;
+    const ligasActivas=LIGAS_CACHE.filter(l=>l.estado==='activa');
+    const ligasHistorial=LIGAS_CACHE.filter(l=>l.estado==='cerrada');
+    const ligasBorrador=LIGAS_CACHE.filter(l=>l.estado==='borrador');
+    const ligaRow=l=>`<div class="li"><div class="lic" onclick="seleccionarLiga('${l.id}')">${l.estado==='cerrada'?'📚':l.estado==='borrador'?'🧪':'🏆'}</div><div class="lii" onclick="seleccionarLiga('${l.id}')"><div class="lit">${l.nombre}</div><div class="lis">${l.temporada}${ACTIVE_LIGA?.id===l.id?' · seleccionada':''}</div></div><div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end"><button class="bsm" onclick="seleccionarLiga('${l.id}')">Ver</button>${l.estado!=='activa'?`<button class="bsm" onclick="cambiarEstadoLiga('${l.id}','activa')">Activar</button>`:''}${l.estado!=='cerrada'?`<button class="bsm" onclick="cambiarEstadoLiga('${l.id}','cerrada')">Cerrar</button>`:''}${l.estado!=='borrador'?`<button class="bsm" onclick="cambiarEstadoLiga('${l.id}','borrador')">Borrador</button>`:''}<button class="bsm" style="background:var(--fire);color:var(--white)" onclick="eliminarLiga('${l.id}','${l.nombre.replace(/'/g,"\\'")}')">Eliminar</button></div></div>`;
+    const ligasHTML=LIGAS_ENABLED
+      ? `<div class="card"><div class="ch"><span class="ct">Control de ligas</span><button class="bsm" onclick="document.getElementById('mo-lg').classList.add('active')">+ Liga</button></div><div style="padding:16px;border-bottom:1px solid var(--edge)"><div style="font-size:12px;color:var(--white);font-weight:700;margin-bottom:10px">Activas ahora · ${ligasActivas.length}</div>${ligasActivas.length?ligasActivas.map(ligaRow).join(''):'<div style="font-size:12px;color:var(--muted)">No hay ligas activas.</div>'}</div><div style="padding:16px;border-bottom:1px solid var(--edge)"><div style="font-size:12px;color:var(--white);font-weight:700;margin-bottom:10px">Borradores · ${ligasBorrador.length}</div>${ligasBorrador.length?ligasBorrador.map(ligaRow).join(''):'<div style="font-size:12px;color:var(--muted)">Sin borradores.</div>'}</div><div style="padding:16px"><div style="font-size:12px;color:var(--white);font-weight:700;margin-bottom:10px">Historial cerrado · ${ligasHistorial.length}</div>${ligasHistorial.length?ligasHistorial.map(ligaRow).join(''):'<div style="font-size:12px;color:var(--muted)">Sin ligas cerradas aún.</div>'}</div></div>`
+      : `<div class="card"><div class="ch"><span class="ct">Ligas</span></div><div style="padding:16px;font-size:12px;color:var(--muted)">Falta crear la tabla <strong>ligas</strong> en Supabase para administrarlas desde la app.</div></div>`;
+    const ligaMode=RELATIONAL_LIGAS?'Ligas simultáneas activas':'Modo legado por temporada';
+    const demoHTML=`<div class="card"><div class="ch"><span class="ct">Pruebas demo</span><button class="bsm" onclick="crearCuentasDemo()">Crear demos</button></div><div style="padding:16px;font-size:12px;color:var(--muted);line-height:1.8">Cuentas preparadas para ver cada rol.<br><strong style="color:var(--white)">demo.arbitro@sportframe.cl</strong><br><strong style="color:var(--white)">demo.capitan@sportframe.cl</strong><br><strong style="color:var(--white)">demo.jugador@sportframe.cl</strong><br>Clave: <strong style="color:var(--white)">SportFrame123!</strong></div></div>`;
+    return`<div class="panel">${renderImpersonationBar()}<div class="ey">Administración</div><div class="pt">PANEL DE CONTROL</div><div class="ps">${ligaDisplay()} · ${ligaMode}</div><div class="adg"><div class="adc"><div class="adci">👥</div><div class="adct">Equipos operativos</div><div class="adcv">${nE||0}</div></div><div class="adc"><div class="adci">👤</div><div class="adct">Jugadores</div><div class="adcv">${nJ||0}</div></div><div class="adc"><div class="adci">🪪</div><div class="adct">Usuarios</div><div class="adcv">${nU||0}</div></div><div class="adc"><div class="adci">🟨</div><div class="adct">Pendientes</div><div class="adcv">${pend?.length||0}</div></div></div>${ligasHTML}${demoHTML}${uHTML}${pvHTML}${pHTML}</div>`;
+  }
+  if(CT===1)return`<div class="panel">${renderImpersonationBar()}<div class="ey">${currentTemporada()}</div><div class="pt">LIGA</div>${await ligaHTML()}</div>`;
+  if(CT===2){
+    const teamIds=await getActiveLeagueTeamIds();
+    const archivedTeamsQuery=TEAM_STATUS_ENABLED?applyLigaFilter(db.from('equipos').select('*').in('estado',['suspendido','eliminado']).order('nombre')):Promise.resolve({data:[]});
+    const playerSearchQuery=teamIds.length?db.from('jugadores').select('id,nombre,equipo_id,posicion,numero,edad,equipos(nombre)').in('equipo_id',teamIds).order('nombre').limit(80):Promise.resolve({data:[]});
+    const [{data:pts},{data:archivedTeams},{data:searchPlayers},eqs] = await Promise.all([
+      applyLigaFilter(db.from('partidos').select('*,el:equipos!partidos_equipo_local_id_fkey(nombre),ev:equipos!partidos_equipo_visita_id_fkey(nombre),ar:usuarios!partidos_arbitro_id_fkey(nombre),liga:ligas(id,nombre,temporada)').order('fecha',{ascending:true,nullsFirst:false}).order('created_at',{ascending:false}).limit(20)),
+      archivedTeamsQuery,
+      playerSearchQuery,
+      loadLeagueTeams()
+    ]);
+    const selectedMatch=ADMIN_MATCH_ID?pts?.find(p=>p.id===ADMIN_MATCH_ID):null;
+    const teamDetail=SELECTED_TEAM_ID?await loadSelectedTeamDetail():null;
+    const controlHTML=selectedMatch?await renderMatchControl(selectedMatch,'Admin · respaldo arbitral'):'';
+    const filteredPlayers=(searchPlayers||[]).filter(j=>!PLAYER_SEARCH_TERM||j.nombre.toLowerCase().includes(PLAYER_SEARCH_TERM));
+    const playerSearchHTML=`<div class="card"><div class="ch"><span class="ct">Buscador de jugadores</span><span style="font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace">${filteredPlayers.length}</span></div><div style="padding:16px;border-bottom:1px solid var(--edge)"><input class="ffi" type="text" placeholder="Escribe el nombre del jugador" value="${PLAYER_SEARCH_TERM}" oninput="setPlayerSearchTerm(this.value)" style="margin-bottom:0"></div>${filteredPlayers.length?filteredPlayers.slice(0,12).map(j=>`<div class="li"><div class="lic">🔎</div><div class="lii"><div class="lit">${j.nombre}</div><div class="lis">${j.equipos?.nombre||'Sin equipo'} · ${j.posicion||'—'}${j.edad?` · ${j.edad} años`:''}</div></div></div>`).join(''):'<div style="padding:20px;text-align:center;font-size:12px;color:var(--muted)">No encontramos jugadores con ese nombre.</div>'}</div>`;
+    const rosterHTML=teamDetail?`<div class="card"><div class="ch"><span class="ct">Equipo · ${teamDetail.team.nombre}</span><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="bsm" onclick="abrirAltaJugador('${teamDetail.team.id}')">+ Jugador</button>${TEAM_MULTI_LIGA_ENABLED?`<button class="bsm" onclick="vincularEquipoALiga('${teamDetail.team.id}','${teamDetail.team.nombre.replace(/'/g,"\\'")}')">+ Liga actual</button>`:''}<button class="bsm" onclick="limpiarEquipoSeleccionado()">Cerrar</button><button class="bsm" style="background:var(--fire);color:var(--white)" onclick="eliminarEquipo('${teamDetail.team.id}','${teamDetail.team.nombre.replace(/'/g,"\\'")}')">Eliminar equipo</button></div></div><div style="padding:16px;border-bottom:1px solid var(--edge);font-size:12px;color:var(--muted)">Liga: ${ACTIVE_LIGA?.nombre||'Sin liga'} · Temporada ${teamDetail.team.temporada||'—'} · ${teamDetail.players.length}/16 jugadores</div>${teamDetail.players.length?teamDetail.players.map(j=>`<div class="li"><div class="lic">👤</div><div class="lii"><div class="lit">${j.nombre}</div><div class="lis">${j.posicion||'—'} · #${j.numero||'—'} · ${j.estado}${j.edad?` · ${j.edad} años`:''}</div></div><button class="bsm" style="background:var(--fire);color:var(--white)" onclick="eliminarJugador('${j.id}','${j.nombre.replace(/'/g,"\\'")}')">Eliminar</button></div>`).join(''):'<div style="padding:20px;text-align:center;font-size:12px;color:var(--muted)">Sin jugadores cargados</div>'}<div class="ch"><span class="ct">Últimos partidos</span><span style="font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace">${teamDetail.matches.length}</span></div>${teamDetail.matches.length?teamDetail.matches.map(m=>`<div class="li"><div class="lic">🏟️</div><div class="lii"><div class="lit">${m.el?.nombre||'—'} ${m.goles_local??0}—${m.goles_visita??0} ${m.ev?.nombre||'—'}</div><div class="lis">${formatFecha(m.fecha)} · ${m.estado}</div></div></div>`).join(''):'<div style="padding:20px;text-align:center;font-size:12px;color:var(--muted)">Sin partidos asociados</div>'}</div>`:'';
+    const matchesHTML=pts?.length?pts.map(p=>`<div class="li"><div class="lic">🏁</div><div class="lii"><div class="lit">${p.el?.nombre||'—'} ${p.goles_local??0}—${p.goles_visita??0} ${p.ev?.nombre||'—'}</div><div class="lis">${formatFecha(p.fecha)} · J${p.jornada||1} · ${p.estado}${p.ar?.nombre?` · Árbitro ${p.ar.nombre}`:''}</div></div><div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end">${p.estado==='pendiente'?`<button class="bsm" onclick="cambiarEstadoPartido('${p.id}','en_curso')">Iniciar</button>`:''}${p.estado!=='finalizado'?`<button class="bsm" onclick="abrirControlPartido('${p.id}')">${ADMIN_MATCH_ID===p.id?'Abierto':'Controlar'}</button><button class="bsm" onclick="editarResultado('${p.id}',${p.goles_local??0},${p.goles_visita??0})">Resultado</button><button class="bsm" onclick="reagendarPartido('${p.id}','${(p.fecha||'').replace(/'/g,"")}')">Reagendar</button>`:''}${p.estado==='en_curso'?`<button class="bsm" onclick="cambiarEstadoPartido('${p.id}','finalizado')">Cerrar</button>`:''}</div></div>`).join(''):'<div style="padding:20px;text-align:center;font-size:12px;color:var(--muted)">Sin partidos aún en esta liga</div>';
+    const archivedHTML=TEAM_STATUS_ENABLED?`<div class="card"><div class="ch"><span class="ct">Equipos sancionados / ocultos</span><span style="font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace">${archivedTeams?.length||0}</span></div>${archivedTeams?.length?archivedTeams.map(e=>`<div class="li"><div class="lic">🚫</div><div class="lii"><div class="lit">${e.nombre}</div><div class="lis">${e.temporada} · ${e.estado||'sin estado'}</div></div><button class="bsm" onclick="restaurarEquipo('${e.id}','${e.nombre.replace(/'/g,"\\'")}')">Restaurar</button></div>`).join(''):'<div style="padding:20px;text-align:center;font-size:12px;color:var(--muted)">Sin equipos suspendidos o eliminados.</div>'}</div>`:'';
+    return`<div class="panel"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px"><div><div class="ey">Gestión</div><div class="pt">OPERACIÓN DE LIGA</div><div class="ps">${ligaDisplay()}</div></div><div style="display:flex;gap:8px"><button class="bsm" onclick="document.getElementById('mo-lg').classList.add('active')">+ Liga</button><button class="bsm" onclick="abrirNuevoUsuario()">+ Usuario</button><button class="bsm" onclick="abrirNuevoPartido()">+ Partido</button><button class="bsm" onclick="document.getElementById('mo-eq').classList.add('active')">+ Equipo</button></div></div>${controlHTML}${rosterHTML}${playerSearchHTML}<div class="card"><div class="ch"><span class="ct">Equipos operativos</span><span style="font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace">${eqs?.length||0}</span></div>${eqs?.length?eqs.map(e=>`<div class="li"><div class="lic" onclick="seleccionarEquipo('${e.id}')">⚽</div><div class="lii" onclick="seleccionarEquipo('${e.id}')"><div class="lit">${e.nombre}</div><div class="lis">${e.temporada}${e.liga_id&&ACTIVE_LIGA?.id!==e.liga_id?' · Otra liga':''}</div></div><div style="display:flex;gap:6px;align-items:center"><button class="bsm" onclick="seleccionarEquipo('${e.id}')">Ver</button><button class="bsm" style="background:var(--fire);color:var(--white)" onclick="eliminarEquipo('${e.id}','${e.nombre.replace(/'/g,"\\'")}')">Sancionar / eliminar</button></div></div>`).join(''):'<div style="padding:20px;text-align:center;font-size:12px;color:var(--muted)">Sin equipos aún en esta liga</div>'}</div>${archivedHTML}<div class="card"><div class="ch"><span class="ct">Calendario y resultados</span><span style="font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace">${pts?.length||0} partidos</span></div>${matchesHTML}</div></div>`;
+  }
+  return profHTML();
+}
+
+async function aprobar(id,n){
+  await db.from('jugadores').update({estado:'habilitado'}).eq('id',id);
+  toast('✅ '+n+' habilitado');await renderContent();
+}
+
+async function rArbitro(){
+  if(CT===0){
+    let query=applyLigaFilter(db.from('partidos').select('*,el:equipos!partidos_equipo_local_id_fkey(id,nombre),ev:equipos!partidos_equipo_visita_id_fkey(id,nombre),liga:ligas(id,nombre,temporada)').eq('estado','en_curso'));
+    const assignedQuery=query.eq('arbitro_id',CU.id).limit(1);
+    let {data:pts}=await assignedQuery;
+    if(!pts?.length){
+      const fallback=await applyLigaFilter(db.from('partidos').select('*,el:equipos!partidos_equipo_local_id_fkey(id,nombre),ev:equipos!partidos_equipo_visita_id_fkey(id,nombre),liga:ligas(id,nombre,temporada)').eq('estado','en_curso')).limit(1);
+      pts=fallback.data;
+    }
+    if(!pts||!pts.length)return`<div class="panel"><div class="ey">Árbitro</div><div class="pt">SIN PARTIDO</div><div class="ps">No hay partidos en curso.</div><div class="card" style="padding:24px;text-align:center"><div style="font-size:40px;margin-bottom:12px">🏁</div><div style="font-size:13px;color:var(--muted)">El admin debe crear e iniciar un partido primero.</div></div></div>`;
+    return`<div class="panel"><div class="ey">Árbitro</div><div class="pt">CONTROL</div><div class="ps">${ligaDisplay()}</div>${await renderMatchControl(pts[0],'Árbitro oficial')}</div>`;
+  }
+  if(CT===1){
+    const{data:h}=await applyLigaFilter(db.from('partidos').select('*,el:equipos!partidos_equipo_local_id_fkey(nombre),ev:equipos!partidos_equipo_visita_id_fkey(nombre)').eq('estado','finalizado').order('created_at',{ascending:false}).limit(10));
+    return`<div class="panel"><div class="ey">Historial</div><div class="pt">MIS PARTIDOS</div><div class="card">${h?.length?h.map(p=>`<div class="li"><div class="lic">🏁</div><div class="lii"><div class="lit">${p.el?.nombre} ${p.goles_local}—${p.goles_visita} ${p.ev?.nombre}</div><div class="lis">J${p.jornada} · Finalizado</div></div></div>`).join(''):'<div style="padding:20px;text-align:center;font-size:12px;color:var(--muted)">Sin historial</div>'}</div></div>`;
+  }
+  return profHTML();
+}
+
+function openM(mode){
+  MM=mode;SP=null;ST='local';
+  const t={goal:'⚽ ¿Quién hizo el gol?',yellow:'🟨 ¿A quién amonestaste?',red:'🟥 ¿A quién expulsaste?'};
+  const bc={goal:'cg',yellow:'cy',red:'cr'};
+  const bt={goal:'Confirmar gol',yellow:'Mostrar amarilla',red:'Expulsar jugador'};
+  document.getElementById('mo-t').textContent=t[mode];
+  const cb=document.getElementById('mo-cb');cb.className='cb '+bc[mode];cb.textContent=bt[mode];
+  document.getElementById('ts-l').className='tsb a'+mode[0];
+  document.getElementById('ts-v').className='tsb';
+  renderPL('local');
+  document.getElementById('mo-p').classList.add('active');
+}
+
+function selTeam(team,btn){
+  ST=team;SP=null;
+  const m=MM[0];
+  document.querySelectorAll('.tsb').forEach(b=>b.className='tsb');
+  btn.className='tsb a'+m;
+  renderPL(team);
+}
+
+function renderPL(team){
+  const pl=PP[team]||[];
+  document.getElementById('mo-pl').innerHTML=pl.length?pl.map(p=>`<div class="pi" onclick="selP(this,'${p.id}','${p.nombre}')"><div class="pa">${ini(p.nombre)}</div><div style="flex:1"><div class="pn">${p.nombre}</div>${p.amarillas>=1?`<div class="pw">⚠ ${p.amarillas} amarilla(s)</div>`:''}</div><div class="pnum">#${p.numero||'—'}</div></div>`).join(''):'<div style="padding:16px;text-align:center;font-size:12px;color:var(--muted)">Sin jugadores habilitados</div>';
+}
+
+function selP(el,id,nombre){
+  document.querySelectorAll('.pi').forEach(i=>i.classList.remove('sg','sy','sr2'));
+  const c={goal:'sg',yellow:'sy',red:'sr2'}[MM];
+  el.classList.add(c);SP={id,nombre};
+}
+
+async function confirmAct(){
+  if(!SP){toast('Selecciona un jugador');return}
+  if(!CPT){toast('Sin partido activo','var(--fire)');return}
+  const min=prompt('Minuto del evento:','1');
+  if(!min||isNaN(parseInt(min)))return;
+  lov(true);
+  try{
+    const eqId=ST==='local'?CPT.equipo_local_id:CPT.equipo_visita_id;
+    await db.from('eventos').insert({partido_id:CPT.id,jugador_id:SP.id,tipo:MM==='goal'?'gol':MM==='yellow'?'amarilla':'roja',minuto:parseInt(min),equipo_id:eqId});
+    if(MM==='goal'){
+      const f=ST==='local'?'goles_local':'goles_visita';
+      const nv=(ST==='local'?CPT.goles_local:CPT.goles_visita)+1;
+      await db.from('partidos').update({[f]:nv}).eq('id',CPT.id);
+    }
+    if(MM==='yellow'){
+      const j=[...PP.local,...PP.visita].find(x=>x.id===SP.id);
+      if(j)await db.from('jugadores').update({amarillas:(j.amarillas||0)+1}).eq('id',SP.id);
+    }
+    if(MM==='red')await db.from('jugadores').update({estado:'suspendido'}).eq('id',SP.id);
+    const m={goal:`⚽ Gol de ${SP.nombre}`,yellow:`🟨 Amarilla: ${SP.nombre}`,red:`🟥 Expulsado: ${SP.nombre}`};
+    toast(m[MM]);closeM('mo-p');await renderContent();
+  }catch(e){toast('Error: '+e.message,'var(--fire)')}
+  lov(false);
+}
+
+function abrirFin(){
+  if(!CPT)return;
+  document.getElementById('es').textContent=`${CPT.goles_local} — ${CPT.goles_visita}`;
+  document.getElementById('mo-e').classList.add('active');
+}
+
+async function confirmEnd(){
+  lov(true);
+  try{
+    await db.from('partidos').update({estado:'finalizado'}).eq('id',CPT.id);
+    if(CR==='admin')ADMIN_MATCH_ID=null;
+    toast('✅ Resultado publicado');CPT=null;closeM('mo-e');await renderContent();
+  }catch(e){toast('Error: '+e.message,'var(--fire)')}
+  lov(false);
+}
+
+async function rCapitan(){
+  if(CT===0){
+    if(!CU.equipo_id)return`<div class="panel"><div class="ey">Mi equipo</div><div class="pt">SIN EQUIPO</div><div class="ps">El admin debe asignarte un equipo.</div></div>`;
+    const[{data:eq},{data:jugs},pos]=await Promise.all([
+      db.from('equipos').select('*').eq('id',CU.equipo_id).single(),
+      db.from('jugadores').select('*').eq('equipo_id',CU.equipo_id).order('nombre'),
+      getPos(),
+    ]);
+    const miP=(pos?.findIndex(e=>e.id===CU.equipo_id)||0)+1;
+    return`<div class="panel"><div class="ey">Mi equipo</div><div class="pt">${eq?.nombre?.toUpperCase()||'—'}</div><div class="ps">${currentTemporada()}</div><div class="sg-grid"><div class="sc"><div class="sv"><span class="a">${miP}°</span></div><div class="sl">Posición</div></div><div class="sc"><div class="sv">${jugs?.length||0}/16</div><div class="sl">Jugadores</div></div><div class="sc"><div class="sv">${jugs?.filter(j=>j.estado==='habilitado').length||0}</div><div class="sl">Habilitados</div></div><div class="sc"><div class="sv">${jugs?.filter(j=>j.estado==='pendiente').length||0}</div><div class="sl">Pendientes</div></div></div><div class="card"><div class="ch"><span class="ct">Nómina · ${jugs?.length||0}</span><button class="bsm" onclick="abrirAltaJugador('${CU.equipo_id}')">+ Agregar</button></div><div style="padding:14px 16px;font-size:12px;color:var(--muted);border-bottom:1px solid var(--edge)">El capitán puede registrar hasta 16 jugadores y crear sus cuentas, pero las bajas y ediciones las resuelve el admin.</div>${jugs?.length?jugs.map(j=>`<div class="pc" onclick="verQRJugador('${j.id}','${j.nombre}')"><div class="pca">${j.foto_selfie_url?`<img src="${j.foto_selfie_url}" style="width:42px;height:42px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(200,255,0,0.2)" onerror="this.style.display='none'">`:ini(j.nombre)}</div><div class="pci"><div class="pcn">${j.nombre}</div><div class="pcp">${j.posicion||'—'} · #${j.numero||'—'}${j.fecha_nacimiento?` · ${calcEdad(j.fecha_nacimiento)} años`:j.edad?` · ${j.edad} años`:''}</div></div><span class="pcs ${j.estado==='habilitado'?'sok':j.estado==='pendiente'?'sp':'sw'}">${j.estado==='habilitado'?'✓ OK':j.estado==='pendiente'?'Pendiente':'⚠'+j.amarillas+'am.'}</span><span style="font-size:18px;opacity:.4;margin-left:4px">⊞</span></div>`).join(''):'<div style="padding:20px;text-align:center;font-size:12px;color:var(--muted)">Sin jugadores</div>'}</div></div>`;
+  }
+  if(CT===1)return`<div class="panel"><div class="ey">${currentTemporada()}</div><div class="pt">LIGA</div>${await ligaHTML()}</div>`;
+  if(CT===2){
+    if(!CU.equipo_id)return`<div class="panel"><div class="pt">PARTIDOS</div><div class="ps">Sin equipo asignado</div></div>`;
+    const{data:pts}=await applyLigaFilter(db.from('partidos').select('*,el:equipos!partidos_equipo_local_id_fkey(nombre),ev:equipos!partidos_equipo_visita_id_fkey(nombre)').or(`equipo_local_id.eq.${CU.equipo_id},equipo_visita_id.eq.${CU.equipo_id}`).order('created_at',{ascending:false}).limit(10));
+    const vivo=pts?.find(p=>p.estado==='en_curso');
+    return`<div class="panel"><div class="ey">Calendario</div><div class="pt">PARTIDOS</div>${vivo?`<div class="ml"><div class="mlh"><span class="mlj">J${vivo.jornada} · En vivo</span><div class="lp"><div class="ld"></div>En vivo</div></div><div class="mlt"><span class="mltn">${vivo.el?.nombre}</span><div><div class="mls pl">${vivo.goles_local} — ${vivo.goles_visita}</div></div><span class="mltn r">${vivo.ev?.nombre}</span></div></div>`:''}<div class="card">${pts?.filter(p=>p.estado==='finalizado').length?pts.filter(p=>p.estado==='finalizado').map(p=>`<div class="li"><div class="lic">⚽</div><div class="lii"><div class="lit">${p.el?.nombre} ${p.goles_local}—${p.goles_visita} ${p.ev?.nombre}</div><div class="lis">J${p.jornada} · Finalizado</div></div></div>`).join(''):'<div style="padding:20px;text-align:center;font-size:12px;color:var(--muted)">Sin partidos aún</div>'}</div></div>`;
+  }
+  return profHTML();
+}
+
+async function inscrJug(){
+  const teamId=PLAYER_TEAM_CONTEXT||CU?.equipo_id;
+  const n=document.getElementById('jn').value.trim(),r=document.getElementById('jr').value.trim(),pos=document.getElementById('jp').value,num=parseInt(document.getElementById('jnu').value),edad=parseInt(document.getElementById('jedad').value),fecha_nacimiento=document.getElementById('jfn').value,telefono=document.getElementById('jtel').value.trim(),contacto_emergencia=document.getElementById('jce').value.trim(),telefono_emergencia=document.getElementById('jte').value.trim(),observaciones_medicas=document.getElementById('jmed').value.trim(),emailJugador=document.getElementById('jmail').value.trim(),passwordJugador=document.getElementById('jpass').value;
+  if(!n||!r){toast('Completa nombre y RUT','var(--fire)');return}
+  if(!vRut(r)){toast('RUT inválido. Ej: 12345678-9','var(--fire)');return}
+  if(!teamId){toast('Selecciona un equipo primero','var(--fire)');return}
+  const {count}=await db.from('jugadores').select('id',{count:'exact',head:true}).eq('equipo_id',teamId);
+  if((count||0)>=16){toast('Máximo 16 jugadores por equipo en fútbol 8','var(--fire)');return}
+  if(emailJugador && passwordJugador.length<6){toast('La contraseña del jugador debe tener 6+ caracteres','var(--fire)');return}
+  lov(true);
+  try{
+    const payload={nombre:n,rut:r,posicion:pos,numero:num,equipo_id:teamId,estado:'pendiente'};
+    if(!isNaN(edad))payload.edad=edad;
+    if(fecha_nacimiento)payload.fecha_nacimiento=fecha_nacimiento;
+    if(telefono)payload.telefono=telefono;
+    if(contacto_emergencia)payload.contacto_emergencia=contacto_emergencia;
+    if(telefono_emergencia)payload.telefono_emergencia=telefono_emergencia;
+    if(observaciones_medicas)payload.observaciones_medicas=observaciones_medicas;
+    const{error}=await db.from('jugadores').insert(payload);
+    if(error)throw error;
+    if(emailJugador){
+      await signUpAndStoreProfile({nombre:n,email:emailJugador,password:passwordJugador||'SportFrame123!',rol:'jugador',equipo_id:teamId});
+    }
+    toast('✅ Jugador inscrito · Esperando aprobación');closeM('mo-j');await renderContent();
+  }catch(e){toast(e.message.includes('unique')?'RUT ya registrado':'Error: '+e.message,'var(--fire)')}
+  lov(false);
+}
+
+async function rJugador(){
+  if(CT===0){
+    let vivo='';
+    if(CU.equipo_id){const{data:pv}=await applyLigaFilter(db.from('partidos').select('*,el:equipos!partidos_equipo_local_id_fkey(nombre),ev:equipos!partidos_equipo_visita_id_fkey(nombre)').or(`equipo_local_id.eq.${CU.equipo_id},equipo_visita_id.eq.${CU.equipo_id}`).eq('estado','en_curso').limit(1));if(pv?.length){const p=pv[0];vivo=`<div class="ml"><div class="mlh"><span class="mlj">Tu equipo · ahora</span><div class="lp"><div class="ld"></div>En vivo</div></div><div class="mlt"><span class="mltn">${p.el?.nombre}</span><div><div class="mls pl">${p.goles_local} — ${p.goles_visita}</div><div class="mlm">⏱ EN CURSO</div></div><span class="mltn r">${p.ev?.nombre}</span></div></div>`}}
+    const{data:jug}=await db.from('jugadores').select('*,equipos(nombre)').eq('rut',CU.rut||'').limit(1);
+    const j=jug?.[0];
+    const edad=j?.fecha_nacimiento?calcEdad(j.fecha_nacimiento):j?.edad;
+    return`<div class="panel"><div class="ey">Bienvenido</div><div class="pt">${CU.nombre.split(' ')[0].toUpperCase()}</div><div class="ps">${j?.equipos?.nombre||'Sin equipo'} · ${j?.posicion||'—'} · #${j?.numero||'—'}${edad?` · ${edad} años`:''}</div>${vivo||'<div class="card" style="padding:16px;text-align:center;font-size:12px;color:var(--muted)">Tu equipo no tiene partido en vivo ahora</div>'}${j?renderPlayerCard(j):''}</div>`;
+  }
+  if(CT===1)return`<div class="panel"><div class="ey">${currentTemporada()}</div><div class="pt">LIGA</div>${await ligaHTML()}</div>`;
+  if(CT===2){
+    if(!CU.equipo_id)return`<div class="panel"><div class="pt">PARTIDOS</div><div class="ps">Sin equipo asignado</div></div>`;
+    const{data:pts}=await applyLigaFilter(db.from('partidos').select('*,el:equipos!partidos_equipo_local_id_fkey(nombre),ev:equipos!partidos_equipo_visita_id_fkey(nombre)').or(`equipo_local_id.eq.${CU.equipo_id},equipo_visita_id.eq.${CU.equipo_id}`).eq('estado','finalizado').order('created_at',{ascending:false}).limit(10));
+    return`<div class="panel"><div class="ey">Mi historial</div><div class="pt">PARTIDOS</div><div class="card">${pts?.length?pts.map(p=>`<div class="li"><div class="lic">⚽</div><div class="lii"><div class="lit">${p.el?.nombre} ${p.goles_local}—${p.goles_visita} ${p.ev?.nombre}</div><div class="lis">J${p.jornada} · Finalizado</div></div></div>`).join(''):'<div style="padding:20px;text-align:center;font-size:12px;color:var(--muted)">Sin partidos</div>'}</div></div>`;
+  }
+  return profHTML();
+}
+
+function profHTML(){
+  const avatarHTML=CU.foto_selfie_url
+    ?`<img src="${CU.foto_selfie_url}" style="width:58px;height:58px;border-radius:50%;object-fit:cover;border:2px solid rgba(200,255,0,0.3);flex-shrink:0" onerror="this.outerHTML='<div class=\'pha\'>${ini(CU.nombre)}</div>'">`
+    :`<div class="pha">${ini(CU.nombre)}</div>`;
+  const rutDisplay=CU.rut?formatRut(CU.rut):'—';
+  const impBar=CR==='admin'?renderImpersonationBar():'';
+  return`<div class="panel">${impBar}<div class="ph">${avatarHTML}<div><div class="phn">${CU.nombre}</div><div class="phr">RUT: ${rutDisplay}</div><div style="font-size:11px;color:var(--muted);margin-top:2px">${CFG[CR].l}</div></div></div>
+  ${CU.verificado?'<div style="display:flex;align-items:center;gap:8px;background:rgba(200,255,0,0.06);border:1px solid rgba(200,255,0,0.2);border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:var(--plasma)">✓ Identidad verificada</div>':'<div style="background:rgba(255,159,10,0.1);border:1px solid rgba(255,159,10,0.2);border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:var(--amber)">⚠ Verificación de identidad pendiente</div>'}
+  <div class="card"><div class="li" onclick="toast('Próximamente')"><div class="lic">🔔</div><div class="lii"><div class="lit">Notificaciones</div></div><div class="lia">›</div></div><div class="li" onclick="logout()"><div class="lic">🚪</div><div class="lii"><div class="lit">Cerrar sesión</div></div></div></div></div>`;
+}
+
+async function abrirNuevoUsuario(){
+  const eqs=await loadLeagueTeams(ACTIVE_LIGA,'id,nombre');
+  document.getElementById('ut').innerHTML=`<option value="">Sin equipo</option>${(eqs||[]).map(e=>`<option value="${e.id}">${e.nombre}</option>`).join('')}`;
+  document.getElementById('mo-u').classList.add('active');
+}
+
+async function crearUsuario(){
+  const nombre=document.getElementById('un').value.trim();
+  const rut=document.getElementById('urut').value.trim();
+  const password=document.getElementById('up').value;
+  const rol=document.getElementById('ur').value;
+  const equipo_id=document.getElementById('ut').value;
+  if(!nombre||!rut||password.length<6){toast('Completa nombre, RUT y clave (6+ caracteres)','var(--fire)');return}
+  if(!vRut(rut)){toast('RUT inválido','var(--fire)');return}
+  const emailInterno=rutToEmail(rut);
+  lov(true);
+  try{
+    const data=await signUpAndStoreProfile({nombre,email:emailInterno,password,rol,equipo_id,rut});
+    closeM('mo-u');
+    toast('✅ Usuario creado · RUT: '+rut+' · Clave: '+password);
+    await renderContent();
+  }catch(e){
+    toast(e.message.includes('already')||e.message.includes('registered')?'Ese RUT ya tiene cuenta':'Error: '+e.message,'var(--fire)');
+  }
+  lov(false);
+}
+
+async function logout(){
+  await db.auth.signOut();CU=null;CR=null;CPT=null;
+  SAVED_USER=null;
+  document.getElementById('screen-app').classList.remove('active');
+  document.getElementById('screen-login').classList.add('active');
+  document.getElementById('continue-btn').style.display='none';
+  document.getElementById('switch-btn').style.display='none';
+  toast('Sesión cerrada');
+}
+
+async function crearEquipo(){
+  const n=document.getElementById('eqn').value.trim();
+  const liga=selectedLigaById(document.getElementById('eql').value);
+  if(!n){toast('Escribe el nombre','var(--fire)');return}
+  lov(true);
+  const payload={nombre:n,temporada:liga?.temporada||currentTemporada()};
+  if(RELATIONAL_LIGAS&&liga?.id)payload.liga_id=liga.id;
+  if(TEAM_STATUS_ENABLED)payload.estado='activo';
+  const{data:newTeam,error}=await db.from('equipos').insert(payload).select('id').single();
+  lov(false);
+  if(error){toast('Error: '+error.message,'var(--fire)');return}
+  if(TEAM_MULTI_LIGA_ENABLED&&liga?.id&&newTeam?.id){
+    await db.from('equipo_ligas').insert({equipo_id:newTeam.id,liga_id:liga.id});
+  }
+  toast('✅ Equipo creado');closeM('mo-eq');await renderContent();
+}
+
+async function abrirNuevoPartido(){
+  const liga=selectedLigaById(document.getElementById('ptlg').value);
+  const [eqs,{data:arbs}] = await Promise.all([
+    loadLeagueTeams(liga),
+    db.from('usuarios').select('id,nombre').eq('rol','arbitro').order('nombre')
+  ]);
+  if(!eqs?.length){toast('Crea equipos primero','var(--fire)');return}
+  const ops=eqs.map(e=>`<option value="${e.id}">${e.nombre}</option>`).join('');
+  const arbOps=`<option value="">Sin árbitro</option>${(arbs||[]).map(a=>`<option value="${a.id}">${a.nombre}</option>`).join('')}`;
+  document.getElementById('ptl').innerHTML=ops;
+  document.getElementById('ptv').innerHTML=ops;
+  document.getElementById('pta').innerHTML=arbOps;
+  document.getElementById('ptf').value=new Date(Date.now()+3600000).toISOString().slice(0,16);
+  document.getElementById('mo-pt').classList.add('active');
+}
+
+async function crearPartido(){
+  const liga=selectedLigaById(document.getElementById('ptlg').value);
+  const l=document.getElementById('ptl').value,v=document.getElementById('ptv').value,j=parseInt(document.getElementById('ptj').value),fecha=document.getElementById('ptf').value,estado=document.getElementById('pts').value,arbitro_id=document.getElementById('pta').value;
+  if(l===v){toast('Los equipos deben ser diferentes','var(--fire)');return}
+  lov(true);
+  const payload={equipo_local_id:l,equipo_visita_id:v,jornada:j,estado,arbitro_id:arbitro_id||null,fecha:fecha||null,temporada:liga?.temporada||currentTemporada()};
+  if(RELATIONAL_LIGAS&&liga?.id)payload.liga_id=liga.id;
+  const{error}=await db.from('partidos').insert(payload);
+  lov(false);
+  if(error){toast('Error: '+error.message,'var(--fire)');return}
+  toast('✅ Partido guardado');closeM('mo-pt');await renderContent();
+}
+
+async function cambiarEstadoPartido(id,estado){
+  lov(true);
+  try{
+    const payload={estado};
+    if(estado==='en_curso'&&!confirm('¿Iniciar este partido ahora?')){lov(false);return}
+    if(estado==='finalizado'&&!confirm('¿Cerrar este partido y publicarlo como finalizado?')){lov(false);return}
+    await db.from('partidos').update(payload).eq('id',id);
+    if(estado==='finalizado'&&ADMIN_MATCH_ID===id)ADMIN_MATCH_ID=null;
+    toast(`✅ Partido ${estado==='en_curso'?'iniciado':'finalizado'}`);
+    await renderContent();
+  }catch(e){
+    toast('Error: '+e.message,'var(--fire)');
+  }
+  lov(false);
+}
+
+async function editarResultado(id,gl=0,gv=0){
+  const local=prompt('Goles local:',gl);
+  if(local===null)return;
+  const visita=prompt('Goles visita:',gv);
+  if(visita===null)return;
+  if(isNaN(parseInt(local))||isNaN(parseInt(visita))){toast('Ingresa marcadores válidos','var(--fire)');return}
+  lov(true);
+  try{
+    await db.from('partidos').update({goles_local:parseInt(local),goles_visita:parseInt(visita)}).eq('id',id);
+    toast('✅ Resultado actualizado');
+    await renderContent();
+  }catch(e){
+    toast('Error: '+e.message,'var(--fire)');
+  }
+  lov(false);
+}
+
+async function reagendarPartido(id,actual=''){
+  const sugerida=(actual&&actual!=='Sin fecha')?actual.replace(' ','T').slice(0,16):new Date(Date.now()+86400000).toISOString().slice(0,16);
+  const fecha=prompt('Nueva fecha y hora (YYYY-MM-DDTHH:MM):',sugerida);
+  if(fecha===null)return;
+  lov(true);
+  try{
+    const {error}=await db.from('partidos').update({fecha:fecha||null,estado:'pendiente'}).eq('id',id);
+    if(error)throw error;
+    toast('📅 Partido reagendado');
+    await renderContent();
+  }catch(e){
+    toast('Error: '+e.message,'var(--fire)');
+  }
+  lov(false);
+}
+
+['mo-p','mo-e','mo-j','mo-eq','mo-pt','mo-su','mo-u','mo-lg','mo-qr'].forEach(id=>{
+  document.getElementById(id).addEventListener('click',function(e){if(e.target===this)closeM(id)});
+});
+
+window.addEventListener('load',async()=>{
+  await checkBootstrap();
+  await checkLigas();
+  await checkLigaRelations();
+  await checkTeamStatusSupport();
+  await checkTeamMultiLigaSupport();
+  const{data:{session}}=await db.auth.getSession();
+  if(session){
+    const{data:u}=await db.from('usuarios').select('*').eq('email',session.user.email).single();
+    if(u)showSavedSession(u);
+  }
+});
+
+
+// ══════════════════════════════════════════
+// ONBOARDING DE FOTOS (capitán y jugador)
+// ══════════════════════════════════════════
+
+async function startOnboarding(){
+  ONBOARD_STEP='selfie';
+  ONBOARD_PHOTOS={};
+  document.getElementById('screen-login').classList.remove('active');
+  document.getElementById('screen-onboard').classList.add('active');
+  updateOnboardUI();
+}
+
+function updateOnboardUI(){
+  const steps={selfie:{title:'📸 Selfie de tu cara',desc:'Sácate una foto clara de frente. Esta foto se usará para verificar tu identidad en la cancha.',btn:'Tomar selfie'},cedula_front:{title:'🪪 Frente de tu cédula',desc:'Fotografía el frente de tu cédula de identidad. Asegúrate que el RUT y tu cara sean legibles.',btn:'Fotografiar frente'},cedula_back:{title:'🪪 Reverso de tu cédula',desc:'Fotografía el reverso de tu cédula de identidad.',btn:'Fotografiar reverso'}};
+  const s=steps[ONBOARD_STEP];
+  document.getElementById('ob-title').textContent=s.title;
+  document.getElementById('ob-desc').textContent=s.desc;
+  document.getElementById('ob-btn').textContent=s.btn;
+  const steps_arr=['selfie','cedula_front','cedula_back'];
+  const idx=steps_arr.indexOf(ONBOARD_STEP);
+  document.getElementById('ob-progress').textContent=`Paso ${idx+1} de 3`;
+  // mostrar preview si ya hay foto
+  const preview=document.getElementById('ob-preview');
+  const key=ONBOARD_STEP==='selfie'?'selfie':ONBOARD_STEP==='cedula_front'?'cedulaFront':'cedulaBack';
+  if(ONBOARD_PHOTOS[key]){
+    preview.src=URL.createObjectURL(ONBOARD_PHOTOS[key]);
+    preview.style.display='block';
+    document.getElementById('ob-retake').style.display='block';
+    document.getElementById('ob-next').style.display='block';
+  } else {
+    preview.style.display='none';
+    document.getElementById('ob-retake').style.display='none';
+    document.getElementById('ob-next').style.display='none';
+  }
+}
+
+async function obOpenCamera(){
+  try{
+    const video=document.getElementById('ob-video');
+    const container=document.getElementById('ob-camera');
+    container.style.display='block';
+    document.getElementById('ob-btn').style.display='none';
+    if(CAM_STREAM){CAM_STREAM.getTracks().forEach(t=>t.stop());}
+    const constraints=ONBOARD_STEP==='selfie'?{video:{facingMode:'user'}}:{video:{facingMode:'environment'}};
+    CAM_STREAM=await navigator.mediaDevices.getUserMedia(constraints);
+    video.srcObject=CAM_STREAM;
+    await video.play();
+  }catch(e){
+    toast('No se pudo acceder a la cámara: '+e.message,'var(--fire)');
+    document.getElementById('ob-btn').style.display='block';
+  }
+}
+
+function obCapture(){
+  const video=document.getElementById('ob-video');
+  const canvas=document.createElement('canvas');
+  canvas.width=video.videoWidth||640;
+  canvas.height=video.videoHeight||480;
+  canvas.getContext('2d').drawImage(video,0,0);
+  canvas.toBlob(blob=>{
+    if(!blob){toast('Error al capturar foto','var(--fire)');return;}
+    const key=ONBOARD_STEP==='selfie'?'selfie':ONBOARD_STEP==='cedula_front'?'cedulaFront':'cedulaBack';
+    ONBOARD_PHOTOS[key]=blob;
+    if(CAM_STREAM){CAM_STREAM.getTracks().forEach(t=>t.stop());CAM_STREAM=null;}
+    document.getElementById('ob-camera').style.display='none';
+    document.getElementById('ob-btn').style.display='block';
+    updateOnboardUI();
+  },'image/jpeg',0.85);
+}
+
+function obRetake(){
+  const key=ONBOARD_STEP==='selfie'?'selfie':ONBOARD_STEP==='cedula_front'?'cedulaFront':'cedulaBack';
+  delete ONBOARD_PHOTOS[key];
+  updateOnboardUI();
+}
+
+async function obNext(){
+  const key=ONBOARD_STEP==='selfie'?'selfie':ONBOARD_STEP==='cedula_front'?'cedulaFront':'cedulaBack';
+  if(!ONBOARD_PHOTOS[key]){toast('Primero saca la foto','var(--fire)');return;}
+  if(ONBOARD_STEP==='selfie'){ONBOARD_STEP='cedula_front';updateOnboardUI();}
+  else if(ONBOARD_STEP==='cedula_front'){ONBOARD_STEP='cedula_back';updateOnboardUI();}
+  else{await obFinish();}
+}
+
+async function obFinish(){
+  if(!ONBOARD_PHOTOS.selfie||!ONBOARD_PHOTOS.cedulaFront||!ONBOARD_PHOTOS.cedulaBack){toast('Completa las 3 fotos','var(--fire)');return;}
+  lov(true);
+  try{
+    const uid=CU.id;
+    async function uploadPhoto(blob,name){
+      const path=`usuarios/${uid}/${name}.jpg`;
+      const {error}=await db.storage.from('sportframe-media').upload(path,blob,{contentType:'image/jpeg',upsert:true});
+      if(error)throw error;
+      const {data}=db.storage.from('sportframe-media').getPublicUrl(path);
+      return data.publicUrl;
+    }
+    const [selfieUrl,frontUrl,backUrl]=await Promise.all([
+      uploadPhoto(ONBOARD_PHOTOS.selfie,'selfie'),
+      uploadPhoto(ONBOARD_PHOTOS.cedulaFront,'cedula_front'),
+      uploadPhoto(ONBOARD_PHOTOS.cedulaBack,'cedula_back'),
+    ]);
+    await db.from('usuarios').update({foto_selfie_url:selfieUrl,foto_cedula_front_url:frontUrl,foto_cedula_back_url:backUrl,verificado:true}).eq('id',uid);
+    CU.foto_selfie_url=selfieUrl;CU.verificado=true;
+    document.getElementById('screen-onboard').classList.remove('active');
+    await initApp();
+    toast('✅ Verificación completada. ¡Bienvenido!');
+  }catch(e){toast('Error subiendo fotos: '+e.message,'var(--fire)');}
+  lov(false);
+}
+
+// ══════════════════════════════════════════
+// MODO IMPERSONACIÓN (admin ve como otro rol)
+// ══════════════════════════════════════════
+
+function impersonar(rol){
+  if(CR!=='admin'){toast('Solo el admin puede cambiar de vista','var(--fire)');return;}
+  VIEW_AS=rol===CR?null:rol;
+  CT=0;
+  const cfg=CFG[effectiveRole()];
+  document.getElementById('rb').textContent=VIEW_AS?`${cfg.l} (admin)`:cfg.l;
+  document.getElementById('rb').className='tb-role '+cfg.b;
+  renderNav();
+  renderContent();
+  toast(VIEW_AS?`👁 Viendo como ${cfg.l}`:'↩ Vista admin restaurada');
+}
+
+function renderImpersonationBar(){
+  if(CR!=='admin')return'';
+  const roles=[{r:'admin',l:'⚙ Admin'},{r:'arbitro',l:'🏁 Árbitro'},{r:'capitan',l:'© Capitán'},{r:'jugador',l:'👤 Jugador'}];
+  return`<div style="background:rgba(200,255,0,0.07);border:1px solid rgba(200,255,0,0.2);border-radius:12px;padding:12px 16px;margin-bottom:14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+    <span style="font-size:10px;color:var(--plasma);font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:.08em;margin-right:4px">Ver como →</span>
+    ${roles.map(r=>`<button onclick="impersonar('${r.r}')" style="background:${effectiveRole()===r.r?'var(--plasma)':'var(--lifted)'};color:${effectiveRole()===r.r?'var(--void)':'var(--white)'};border:1px solid ${effectiveRole()===r.r?'var(--plasma)':'var(--edge)'};border-radius:8px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif">${r.l}</button>`).join('')}
+  </div>`;
+}
+
+// ══════════════════════════════════════════
+// PERFIL DE JUGADOR Y QR EN CANCHA
+// ══════════════════════════════════════════
+
+function calcEdad(fechaNacimiento){
+  if(!fechaNacimiento)return null;
+  const hoy=new Date(),nac=new Date(fechaNacimiento);
+  let edad=hoy.getFullYear()-nac.getFullYear();
+  const m=hoy.getMonth()-nac.getMonth();
+  if(m<0||(m===0&&hoy.getDate()<nac.getDate()))edad--;
+  return edad;
+}
+
+function formatRut(rut){
+  if(!rut)return'—';
+  const clean=rut.replace(/\./g,'').replace(/-/g,'');
+  if(clean.length<2)return rut;
+  const dv=clean.slice(-1);
+  const nums=clean.slice(0,-1);
+  return nums.replace(/\B(?=(\d{3})+(?!\d))/g,'.')+'-'+dv;
+}
+
+function renderPlayerCard(j){
+  const edad=j.fecha_nacimiento?calcEdad(j.fecha_nacimiento):j.edad;
+  const statusCls=j.estado==='habilitado'?'sok':j.estado==='pendiente'?'sp':'sw';
+  const statusLabel=j.estado==='habilitado'?'✓ Habilitado':j.estado==='pendiente'?'⏳ Pendiente aprobación':'⚠ '+j.amarillas+' amarilla(s)';
+  return`<div style="background:var(--surface);border:1px solid var(--edge);border-radius:16px;padding:20px;margin-bottom:14px">
+    <div style="display:flex;gap:14px;align-items:center;margin-bottom:16px">
+      ${j.foto_selfie_url?`<img src="${j.foto_selfie_url}" style="width:64px;height:64px;border-radius:50%;object-fit:cover;border:2px solid rgba(200,255,0,0.3)" onerror="this.outerHTML='<div style=\'width:64px;height:64px;border-radius:50%;background:var(--plasma-dim);border:2px solid rgba(200,255,0,0.3);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;color:var(--plasma);font-family:Syne,sans-serif\'>${ini(j.nombre)}</div>'">`:`<div style="width:64px;height:64px;border-radius:50%;background:var(--plasma-dim);border:2px solid rgba(200,255,0,0.3);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;color:var(--plasma);font-family:'Syne',sans-serif">${ini(j.nombre)}</div>`}
+      <div style="flex:1">
+        <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;letter-spacing:-.3px">${j.nombre}</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px">${j.posicion||'—'} · #${j.numero||'—'}</div>
+        <span class="pcs ${statusCls}" style="margin-top:6px;display:inline-block">${statusLabel}</span>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:12px">
+      <div><div style="color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px">RUT</div><div style="font-weight:600;color:var(--white)">${formatRut(j.rut)}</div></div>
+      ${j.fecha_nacimiento?`<div><div style="color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px">Edad</div><div style="font-weight:600;color:var(--white)">${edad} años</div></div>`:''}
+      ${j.fecha_nacimiento?`<div><div style="color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px">Nacimiento</div><div style="font-weight:600;color:var(--white)">${new Date(j.fecha_nacimiento).toLocaleDateString('es-CL')}</div></div>`:''}
+      <div><div style="color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px">Amarillas</div><div style="font-weight:600;color:${j.amarillas>0?'var(--amber)':'var(--white)'}">${j.amarillas||0}</div></div>
+    </div>
+    ${(j.foto_cedula_front_url||j.foto_cedula_back_url)?`<div style="margin-top:14px;border-top:1px solid var(--edge);padding-top:12px"><div style="font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Cédula de identidad</div><div style="display:flex;gap:8px">${j.foto_cedula_front_url?`<img src="${j.foto_cedula_front_url}" style="flex:1;height:80px;object-fit:cover;border-radius:8px;border:1px solid var(--edge)">`:''}${j.foto_cedula_back_url?`<img src="${j.foto_cedula_back_url}" style="flex:1;height:80px;object-fit:cover;border-radius:8px;border:1px solid var(--edge)">`:''}  </div></div>`:''}
+  </div>`;
+}
+
+// QR para verificación en cancha
+function generarQRUrl(jugadorId){
+  const data=encodeURIComponent(JSON.stringify({id:jugadorId,sf:1}));
+  return`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${data}&bgcolor=131A13&color=C8FF00&margin=10`;
+}
+
+async function verQRJugador(jugadorId, nombre){
+  const {data:j}=await db.from('jugadores').select('*').eq('id',jugadorId).single();
+  if(!j){toast('Jugador no encontrado','var(--fire)');return;}
+  const edad=j.fecha_nacimiento?calcEdad(j.fecha_nacimiento):j.edad;
+  document.getElementById('qr-content').innerHTML=`
+    <div style="text-align:center;padding:8px 0 16px">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--plasma);text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px">Verificación en cancha</div>
+      ${j.foto_selfie_url?`<img src="${j.foto_selfie_url}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid rgba(200,255,0,0.4);margin-bottom:12px">`:`<div style="width:80px;height:80px;border-radius:50%;background:var(--plasma-dim);border:2px solid rgba(200,255,0,0.3);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;color:var(--plasma);margin:0 auto 12px;font-family:'Syne',sans-serif">${ini(j.nombre)}</div>`}
+      <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:4px">${j.nombre}</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:16px">${j.posicion||'—'} · #${j.numero||'—'}${edad?` · ${edad} años`:''}</div>
+      <img src="${generarQRUrl(jugadorId)}" style="width:160px;height:160px;border-radius:12px;margin-bottom:12px">
+      <div style="font-size:13px;font-weight:700;color:var(--white);margin-bottom:4px">${formatRut(j.rut)}</div>
+      <span class="pcs ${j.estado==='habilitado'?'sok':'sw'}">${j.estado==='habilitado'?'✓ Habilitado para jugar':'⚠ No habilitado'}</span>
+      ${j.amarillas>0?`<div style="margin-top:8px;font-size:12px;color:var(--amber)">⚠ ${j.amarillas} tarjeta(s) amarilla acumulada(s)</div>`:''}
+    </div>`;
+  document.getElementById('mo-qr').classList.add('active');
+}
+
+</script>
+
+<!-- PANTALLA ONBOARDING FOTOS -->
+<div class="screen" id="screen-onboard" style="background:var(--void);justify-content:center;align-items:center;padding:24px;position:relative">
+  <div style="width:100%;max-width:360px">
+    <div style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;text-align:center;margin-bottom:4px">SportFrame<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--plasma);margin-left:3px;vertical-align:middle"></span></div>
+    <div style="font-size:11px;color:var(--muted);text-align:center;margin-bottom:28px;font-family:'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase" id="ob-progress">Paso 1 de 3</div>
+    <div style="background:var(--surface);border:1px solid var(--edge);border-radius:20px;padding:24px">
+      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:8px" id="ob-title">📸 Selfie de tu cara</div>
+      <div style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:20px" id="ob-desc">Sácate una foto clara de frente.</div>
+      <!-- Preview foto -->
+      <img id="ob-preview" style="display:none;width:100%;max-height:240px;object-fit:cover;border-radius:12px;margin-bottom:14px;border:1px solid var(--edge)">
+      <!-- Cámara -->
+      <div id="ob-camera" style="display:none;margin-bottom:14px;position:relative">
+        <video id="ob-video" style="width:100%;border-radius:12px;background:#000" playsinline></video>
+        <button onclick="obCapture()" style="position:absolute;bottom:12px;left:50%;transform:translateX(-50%);background:var(--plasma);color:var(--void);border:none;border-radius:100px;padding:12px 28px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif">📸 Capturar</button>
+      </div>
+      <!-- Botones -->
+      <button id="ob-btn" onclick="obOpenCamera()" style="width:100%;background:var(--plasma);color:var(--void);border:none;border-radius:12px;padding:15px;font-size:15px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif;margin-bottom:10px">Tomar selfie</button>
+      <button id="ob-retake" onclick="obRetake()" style="display:none;width:100%;background:transparent;color:var(--muted);border:1px solid var(--edge);border-radius:12px;padding:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif;margin-bottom:10px">↩ Repetir foto</button>
+      <button id="ob-next" onclick="obNext()" style="display:none;width:100%;background:var(--lifted);color:var(--white);border:1px solid var(--edge);border-radius:12px;padding:14px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif">Continuar →</button>
+    </div>
+    <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:16px;line-height:1.6">Tus fotos se almacenan de forma segura y solo son visibles para los administradores de SportFrame al verificar tu identidad.</div>
+  </div>
+</div>
+
+<!-- MODAL QR -->
+<div class="mo" id="mo-qr"><div class="ms">
+  <div class="mh"></div>
+  <div id="qr-content"></div>
+  <div class="cl" onclick="closeM('mo-qr')">Cerrar</div>
+</div></div>
+
+</body>
+</html>
+
