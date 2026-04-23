@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -26,7 +26,12 @@ body{font-family:'Outfit',sans-serif;color:var(--white);font-size:15px;user-sele
 .fi:focus{border-color:rgba(200,255,0,0.4)}
 .btn-p{width:100%;background:var(--plasma);color:var(--void);border:none;border-radius:12px;padding:15px;font-size:15px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif;transition:all .2s;margin-top:4px}
 .btn-p:active{transform:scale(.97)}
+.btn-s{width:100%;background:transparent;color:var(--white);border:1px solid var(--edge);border-radius:12px;padding:14px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif;transition:all .2s;margin-top:10px}
+.btn-s:active{transform:scale(.97)}
+.btn-s:hover{border-color:rgba(200,255,0,0.3);color:var(--plasma)}
 .err{background:rgba(255,77,28,0.1);border:1px solid rgba(255,77,28,0.2);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--fire);margin-top:12px;display:none;text-align:center}
+.login-help{font-size:11px;color:var(--muted);line-height:1.6;margin-top:14px;text-align:center}
+.login-help strong{color:var(--white)}
 .top-bar{height:58px;background:rgba(6,6,8,0.95);border-bottom:1px solid var(--edge);display:flex;align-items:center;padding:0 18px;gap:10px;flex-shrink:0}
 .tb-logo{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;letter-spacing:-.5px}
 .tb-role{font-size:9px;font-weight:700;padding:3px 10px;border-radius:100px;text-transform:uppercase;letter-spacing:.08em;font-family:'JetBrains Mono',monospace}
@@ -189,7 +194,9 @@ body{font-family:'Outfit',sans-serif;color:var(--white);font-size:15px;user-sele
     <label class="fl">Contraseña</label>
     <input class="fi" type="password" id="lp" placeholder="••••••••" onkeydown="if(event.key==='Enter')login()">
     <button class="btn-p" onclick="login()" id="lb">Entrar →</button>
+    <button class="btn-s" onclick="openSetup()" id="setup-btn" style="display:none">Crear primer administrador</button>
     <div class="err" id="lerr"></div>
+    <div class="login-help" id="login-help">Usa un usuario ya creado en SportFrame para entrar.</div>
   </div>
 </div>
 
@@ -245,13 +252,37 @@ body{font-family:'Outfit',sans-serif;color:var(--white);font-size:15px;user-sele
   <div class="cl" onclick="closeM('mo-pt')">Cancelar</div>
 </div></div>
 
+<div class="mo" id="mo-su"><div class="ms"><div class="mh"></div><div class="mt">🚀 Crear administrador inicial</div>
+  <label class="fgi">Nombre completo</label><input class="ffi" type="text" id="sun" placeholder="Tu nombre completo">
+  <label class="fgi">Correo electrónico</label><input class="ffi" type="email" id="sue" placeholder="admin@sportframe.cl">
+  <label class="fgi">Contraseña</label><input class="ffi" type="password" id="sup" placeholder="Mínimo 6 caracteres">
+  <button class="cb cg" onclick="crearPrimerAdmin()">Crear administrador</button>
+  <div class="cl" onclick="closeM('mo-su')">Cancelar</div>
+</div></div>
+
+<div class="mo" id="mo-u"><div class="ms"><div class="mh"></div><div class="mt">👤 Nuevo usuario</div>
+  <label class="fgi">Nombre completo</label><input class="ffi" type="text" id="un" placeholder="Nombre y apellido">
+  <label class="fgi">Correo electrónico</label><input class="ffi" type="email" id="ue" placeholder="usuario@correo.com">
+  <label class="fgi">Contraseña temporal</label><input class="ffi" type="password" id="up" placeholder="Mínimo 6 caracteres">
+  <label class="fgi">Rol</label>
+  <select class="ffs" id="ur">
+    <option value="arbitro">Árbitro</option>
+    <option value="capitan">Capitán</option>
+    <option value="jugador">Jugador</option>
+    <option value="admin">Admin</option>
+  </select>
+  <label class="fgi">Equipo asignado (opcional)</label><select class="ffs" id="ut"><option value="">Sin equipo</option></select>
+  <button class="cb cg" onclick="crearUsuario()">Crear usuario</button>
+  <div class="cl" onclick="closeM('mo-u')">Cancelar</div>
+</div></div>
+
 <script>
 const SUPA_URL='https://xnmiugofbewcfgpggkwe.supabase.co';
 const SUPA_KEY='sb_publishable_ad3pNyA56DgBDtq0D7Dc8Q_ESN1lqr5';
 const {createClient}=supabase;
 const db=createClient(SUPA_URL,SUPA_KEY);
 
-let CU=null,CR=null,CT=0,MM='goal',ST='local',SP=null,CPT=null,PP={local:[],visita:[]};
+let CU=null,CR=null,CT=0,MM='goal',ST='local',SP=null,CPT=null,PP={local:[],visita:[]},BOOTSTRAP=false;
 
 const CFG={
   admin:{l:'Admin',b:'ra',a:'AD',tabs:[{i:'📊',l:'Panel'},{i:'⚽',l:'Liga'},{i:'👥',l:'Equipos'},{i:'👤',l:'Perfil'}]},
@@ -265,12 +296,77 @@ function lov(s){document.getElementById('lov').classList.toggle('active',s)}
 function closeM(id){document.getElementById(id).classList.remove('active')}
 function ini(n){return n.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()}
 function vRut(r){r=r.replace(/\./g,'').replace(/-/g,'');if(r.length<8)return false;const dv=r.slice(-1).toUpperCase(),nums=r.slice(0,-1);let s=0,m=2;for(let i=nums.length-1;i>=0;i--){s+=parseInt(nums[i])*m;m=m===7?2:m+1}const res=11-(s%11),dc=res===11?'0':res===10?'K':String(res);return dv===dc}
+function setErr(msg=''){const err=document.getElementById('lerr');err.textContent=msg;err.style.display=msg?'block':'none'}
+function openSetup(){document.getElementById('mo-su').classList.add('active')}
+
+async function checkBootstrap(){
+  try{
+    const{count,error}=await db.from('usuarios').select('*',{count:'exact',head:true});
+    if(error)throw error;
+    BOOTSTRAP=(count||0)===0;
+    document.getElementById('setup-btn').style.display=BOOTSTRAP?'block':'none';
+    document.getElementById('login-help').innerHTML=BOOTSTRAP
+      ? 'La base está vacía. <strong>Crea el primer administrador</strong> para empezar a cargar equipos, usuarios y partidos.'
+      : 'Usa un usuario ya creado en SportFrame para entrar.';
+  }catch(e){
+    document.getElementById('login-help').textContent='No pude verificar la base todavía. Igual puedes intentar entrar.';
+  }
+}
+
+async function signUpAndStoreProfile({nombre,email,password,rol,equipo_id=''}){
+  const prevSession=(await db.auth.getSession()).data.session;
+  const normalizedEmail=email.toLowerCase();
+  const payload={email:normalizedEmail,password,options:{data:{nombre,rol}}};
+  const {data, error}=await db.auth.signUp(payload);
+  if(error)throw error;
+  const userId=data.user?.id;
+  const {error:profileError}=await db.from('usuarios').upsert({
+    id:userId,
+    email:normalizedEmail,
+    nombre,
+    rol,
+    equipo_id:equipo_id||null
+  },{onConflict:'email'});
+  if(profileError)throw profileError;
+  if(prevSession?.access_token&&prevSession?.refresh_token){
+    await db.auth.setSession({
+      access_token:prevSession.access_token,
+      refresh_token:prevSession.refresh_token
+    });
+  }
+  return data;
+}
+
+async function crearPrimerAdmin(){
+  const nombre=document.getElementById('sun').value.trim();
+  const email=document.getElementById('sue').value.trim();
+  const password=document.getElementById('sup').value;
+  if(!nombre||!email||password.length<6){toast('Completa nombre, correo y una contraseña de 6+ caracteres','var(--fire)');return}
+  lov(true);
+  try{
+    const data=await signUpAndStoreProfile({nombre,email,password,rol:'admin'});
+    closeM('mo-su');
+    document.getElementById('le').value=email;
+    document.getElementById('lp').value=password;
+    if(data.session){
+      const {data:u}=await db.from('usuarios').select('*').eq('email',email.toLowerCase()).single();
+      CU=u;CR='admin';
+      await initApp();
+      toast('✅ Administrador creado');
+    }else{
+      setErr('Administrador creado. Si Supabase exige confirmación de correo, confirma el email antes de entrar.');
+    }
+    await checkBootstrap();
+  }catch(e){
+    toast(e.message.includes('already')||e.message.includes('registered')?'Ese correo ya existe':'Error: '+e.message,'var(--fire)');
+  }
+  lov(false);
+}
 
 async function login(){
   const e=document.getElementById('le').value.trim(),p=document.getElementById('lp').value;
-  const err=document.getElementById('lerr');
-  if(!e||!p){err.textContent='Ingresa correo y contraseña';err.style.display='block';return}
-  err.style.display='none';
+  if(!e||!p){setErr('Ingresa correo y contraseña');return}
+  setErr('');
   document.getElementById('lb').disabled=true;
   lov(true);
   try{
@@ -281,8 +377,7 @@ async function login(){
     CU=u;CR=u.rol;
     await initApp();
   }catch(ex){
-    err.textContent=ex.message.includes('Invalid')?'Correo o contraseña incorrectos':ex.message;
-    err.style.display='block';
+    setErr(ex.message.includes('Invalid')?'Correo o contraseña incorrectos':ex.message);
   }finally{lov(false);document.getElementById('lb').disabled=false}
 }
 
@@ -315,8 +410,47 @@ async function renderContent(){
   lov(false);
 }
 
-async function getPos(){const{data}=await db.from('tabla_posiciones').select('*');return data||[]}
-async function getGoles(){const{data}=await db.from('tabla_goleadores').select('*');return data||[]}
+async function loadLigaData(){
+  const [{data:equipos,error:eqErr},{data:partidos,error:ptErr},{data:eventos,error:evErr},{data:jugadores,error:juErr}] = await Promise.all([
+    db.from('equipos').select('id,nombre').order('nombre'),
+    db.from('partidos').select('id,equipo_local_id,equipo_visita_id,goles_local,goles_visita,estado'),
+    db.from('eventos').select('id,partido_id,jugador_id,tipo,equipo_id'),
+    db.from('jugadores').select('id,nombre,equipo_id,posicion')
+  ]);
+  if(eqErr||ptErr||evErr||juErr)throw (eqErr||ptErr||evErr||juErr);
+  return {equipos:equipos||[],partidos:partidos||[],eventos:eventos||[],jugadores:jugadores||[]};
+}
+
+async function getPos(){
+  const {equipos,partidos}=await loadLigaData();
+  const map=new Map(equipos.map(e=>[e.id,{id:e.id,nombre:e.nombre,pj:0,pg:0,pe:0,pp:0,gf:0,gc:0,pts:0}]));
+  partidos.filter(p=>p.estado==='finalizado').forEach(p=>{
+    const l=map.get(p.equipo_local_id),v=map.get(p.equipo_visita_id);
+    if(!l||!v)return;
+    const gl=Number(p.goles_local||0),gv=Number(p.goles_visita||0);
+    l.pj++;v.pj++;l.gf+=gl;l.gc+=gv;v.gf+=gv;v.gc+=gl;
+    if(gl>gv){l.pg++;l.pts+=3;v.pp++;}
+    else if(gv>gl){v.pg++;v.pts+=3;l.pp++;}
+    else{l.pe++;v.pe++;l.pts++;v.pts++;}
+  });
+  return [...map.values()].sort((a,b)=>(b.pts-a.pts)||((b.gf-b.gc)-(a.gf-a.gc))||(b.gf-a.gf)||a.nombre.localeCompare(b.nombre));
+}
+
+async function getGoles(){
+  const {equipos,eventos,jugadores}=await loadLigaData();
+  const equiposMap=new Map(equipos.map(e=>[e.id,e.nombre]));
+  const jugadoresMap=new Map(jugadores.map(j=>[j.id,j]));
+  const goles=new Map();
+  eventos.filter(e=>e.tipo==='gol').forEach(e=>{
+    const j=jugadoresMap.get(e.jugador_id);
+    const key=e.jugador_id||j?.nombre;
+    if(!key)return;
+    const cur=goles.get(key)||{nombre:j?.nombre||'Jugador',equipo:equiposMap.get(e.equipo_id||j?.equipo_id)||'Sin equipo',goles:0};
+    cur.goles++;
+    goles.set(key,cur);
+  });
+  return [...goles.values()].sort((a,b)=>(b.goles-a.goles)||a.nombre.localeCompare(b.nombre));
+}
 
 function tblHTML(rows){
   if(!rows.length)return'<div style="padding:20px;text-align:center;font-size:12px;color:var(--muted)">Sin datos aún</div>';
@@ -335,21 +469,26 @@ async function ligaHTML(){
 
 async function rAdmin(){
   if(CT===0){
-    const[{count:nE},{count:nJ},{data:pV}]=await Promise.all([
+    const[{count:nE},{count:nJ},{count:nU},{data:pV},{data:users},{data:userTeams}]=await Promise.all([
       db.from('equipos').select('*',{count:'exact',head:true}),
       db.from('jugadores').select('*',{count:'exact',head:true}),
+      db.from('usuarios').select('*',{count:'exact',head:true}),
       db.from('partidos').select('*,el:equipos!partidos_equipo_local_id_fkey(nombre),ev:equipos!partidos_equipo_visita_id_fkey(nombre)').eq('estado','en_curso'),
+      db.from('usuarios').select('nombre,email,rol,equipo_id').order('created_at',{ascending:false}).limit(5),
+      db.from('equipos').select('id,nombre')
     ]);
     const{data:pend}=await db.from('jugadores').select('*,equipos(nombre)').eq('estado','pendiente').limit(5);
-    let pvHTML='',pHTML='';
+    let pvHTML='',pHTML='',uHTML='';
+    const userTeamsMap=new Map((userTeams||[]).map(t=>[t.id,t.nombre]));
     if(pV?.length){const p=pV[0];pvHTML=`<div class="card"><div class="ch"><span class="ct">En vivo</span><div class="lp"><div class="ld"></div>En vivo</div></div><div style="padding:16px"><div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:13px;font-weight:700">${p.el?.nombre||'—'}</span><span style="font-family:'Syne',sans-serif;font-size:32px;font-weight:800;color:var(--plasma)">${p.goles_local} — ${p.goles_visita}</span><span style="font-size:13px;font-weight:700">${p.ev?.nombre||'—'}</span></div></div></div>`}
     if(pend?.length){pHTML=`<div class="card"><div class="ch"><span class="ct">Pendientes aprobación</span></div>${pend.map(j=>`<div class="li" onclick="aprobar('${j.id}','${j.nombre}')"><div class="lic" style="background:var(--plasma-dim)">👤</div><div class="lii"><div class="lit">${j.nombre}</div><div class="lis">${j.equipos?.nombre||'—'} · ${j.rut}</div></div><span style="font-size:11px;color:var(--plasma);font-weight:700;font-family:'JetBrains Mono',monospace">APROBAR</span></div>`).join('')}</div>`}
-    return`<div class="panel"><div class="ey">Administración</div><div class="pt">PANEL</div><div class="ps">Apertura 2025</div><div class="adg"><div class="adc"><div class="adci">👥</div><div class="adct">Equipos</div><div class="adcv">${nE||0}</div></div><div class="adc"><div class="adci">👤</div><div class="adct">Jugadores</div><div class="adcv">${nJ||0}</div></div><div class="adc" onclick="switchTab(2)"><div class="adci">🏁</div><div class="adct">En vivo</div><div class="adcv">${pV?.length||0}</div></div><div class="adc"><div class="adci">🟨</div><div class="adct">Pendientes</div><div class="adcv">${pend?.length||0}</div></div></div>${pvHTML}${pHTML}</div>`;
+    uHTML=`<div class="card"><div class="ch"><span class="ct">Usuarios</span><button class="bsm" onclick="abrirNuevoUsuario()">+ Usuario</button></div>${users?.length?users.map(u=>`<div class="li"><div class="lic">👤</div><div class="lii"><div class="lit">${u.nombre}</div><div class="lis">${u.email} · ${u.rol}${u.equipo_id&&userTeamsMap.get(u.equipo_id)?` · ${userTeamsMap.get(u.equipo_id)}`:''}</div></div></div>`).join(''):'<div style="padding:20px;text-align:center;font-size:12px;color:var(--muted)">Sin usuarios aún</div>'}</div>`;
+    return`<div class="panel"><div class="ey">Administración</div><div class="pt">PANEL</div><div class="ps">Apertura 2025</div><div class="adg"><div class="adc"><div class="adci">👥</div><div class="adct">Equipos</div><div class="adcv">${nE||0}</div></div><div class="adc"><div class="adci">👤</div><div class="adct">Jugadores</div><div class="adcv">${nJ||0}</div></div><div class="adc"><div class="adci">🪪</div><div class="adct">Usuarios</div><div class="adcv">${nU||0}</div></div><div class="adc"><div class="adci">🟨</div><div class="adct">Pendientes</div><div class="adcv">${pend?.length||0}</div></div></div>${uHTML}${pvHTML}${pHTML}</div>`;
   }
   if(CT===1)return`<div class="panel"><div class="ey">Apertura 2025</div><div class="pt">LIGA</div>${await ligaHTML()}</div>`;
   if(CT===2){
     const{data:eqs}=await db.from('equipos').select('*');
-    return`<div class="panel"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px"><div><div class="ey">Gestión</div><div class="pt">EQUIPOS</div></div><div style="display:flex;gap:8px"><button class="bsm" onclick="abrirNuevoPartido()">+ Partido</button><button class="bsm" onclick="document.getElementById('mo-eq').classList.add('active')">+ Equipo</button></div></div><div class="card">${eqs?.length?eqs.map(e=>`<div class="li"><div class="lic">⚽</div><div class="lii"><div class="lit">${e.nombre}</div><div class="lis">Temporada ${e.temporada}</div></div><div class="lia">›</div></div>`).join(''):'<div style="padding:20px;text-align:center;font-size:12px;color:var(--muted)">Sin equipos aún</div>'}</div></div>`;
+    return`<div class="panel"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px"><div><div class="ey">Gestión</div><div class="pt">EQUIPOS</div></div><div style="display:flex;gap:8px"><button class="bsm" onclick="abrirNuevoUsuario()">+ Usuario</button><button class="bsm" onclick="abrirNuevoPartido()">+ Partido</button><button class="bsm" onclick="document.getElementById('mo-eq').classList.add('active')">+ Equipo</button></div></div><div class="card">${eqs?.length?eqs.map(e=>`<div class="li"><div class="lic">⚽</div><div class="lii"><div class="lit">${e.nombre}</div><div class="lis">Temporada ${e.temporada}</div></div><div class="lia">›</div></div>`).join(''):'<div style="padding:20px;text-align:center;font-size:12px;color:var(--muted)">Sin equipos aún</div>'}</div></div>`;
   }
   return profHTML();
 }
@@ -457,10 +596,10 @@ async function confirmEnd(){
 async function rCapitan(){
   if(CT===0){
     if(!CU.equipo_id)return`<div class="panel"><div class="ey">Mi equipo</div><div class="pt">SIN EQUIPO</div><div class="ps">El admin debe asignarte un equipo.</div></div>`;
-    const[{data:eq},{data:jugs},{data:pos}]=await Promise.all([
+    const[{data:eq},{data:jugs},pos]=await Promise.all([
       db.from('equipos').select('*').eq('id',CU.equipo_id).single(),
       db.from('jugadores').select('*').eq('equipo_id',CU.equipo_id).order('nombre'),
-      db.from('tabla_posiciones').select('*'),
+      getPos(),
     ]);
     const miP=(pos?.findIndex(e=>e.id===CU.equipo_id)||0)+1;
     return`<div class="panel"><div class="ey">Mi equipo</div><div class="pt">${eq?.nombre?.toUpperCase()||'—'}</div><div class="ps">Apertura 2025</div><div class="sg-grid"><div class="sc"><div class="sv"><span class="a">${miP}°</span></div><div class="sl">Posición</div></div><div class="sc"><div class="sv">${jugs?.length||0}</div><div class="sl">Jugadores</div></div><div class="sc"><div class="sv">${jugs?.filter(j=>j.estado==='habilitado').length||0}</div><div class="sl">Habilitados</div></div><div class="sc"><div class="sv">${jugs?.filter(j=>j.estado==='pendiente').length||0}</div><div class="sl">Pendientes</div></div></div><div class="card"><div class="ch"><span class="ct">Nómina · ${jugs?.length||0}</span><button class="bsm" onclick="document.getElementById('mo-j').classList.add('active')">+ Agregar</button></div>${jugs?.length?jugs.map(j=>`<div class="pc"><div class="pca">${ini(j.nombre)}</div><div class="pci"><div class="pcn">${j.nombre}</div><div class="pcp">${j.posicion||'—'} · #${j.numero||'—'}</div></div><span class="pcs ${j.estado==='habilitado'?'sok':j.estado==='pendiente'?'sp':'sw'}">${j.estado==='habilitado'?'✓ OK':j.estado==='pendiente'?'Pendiente':'⚠'+j.amarillas+'am.'}</span></div>`).join(''):'<div style="padding:20px;text-align:center;font-size:12px;color:var(--muted)">Sin jugadores</div>'}</div></div>`;
@@ -509,6 +648,31 @@ function profHTML(){
   return`<div class="panel"><div class="ph"><div class="pha">${ini(CU.nombre)}</div><div><div class="phn">${CU.nombre}</div><div class="phr">${CU.email}</div></div></div><div class="card"><div class="li" onclick="toast('Próximamente')"><div class="lic">🔔</div><div class="lii"><div class="lit">Notificaciones</div></div><div class="lia">›</div></div><div class="li" onclick="logout()"><div class="lic">🚪</div><div class="lii"><div class="lit">Cerrar sesión</div></div></div></div></div>`;
 }
 
+async function abrirNuevoUsuario(){
+  const {data:eqs}=await db.from('equipos').select('id,nombre').order('nombre');
+  document.getElementById('ut').innerHTML=`<option value="">Sin equipo</option>${(eqs||[]).map(e=>`<option value="${e.id}">${e.nombre}</option>`).join('')}`;
+  document.getElementById('mo-u').classList.add('active');
+}
+
+async function crearUsuario(){
+  const nombre=document.getElementById('un').value.trim();
+  const email=document.getElementById('ue').value.trim();
+  const password=document.getElementById('up').value;
+  const rol=document.getElementById('ur').value;
+  const equipo_id=document.getElementById('ut').value;
+  if(!nombre||!email||password.length<6){toast('Completa nombre, correo y contraseña temporal','var(--fire)');return}
+  lov(true);
+  try{
+    const data=await signUpAndStoreProfile({nombre,email,password,rol,equipo_id});
+    closeM('mo-u');
+    toast(data.session?'✅ Usuario creado':'✅ Usuario creado. Si Auth pide confirmación, debe confirmar su correo');
+    await renderContent();
+  }catch(e){
+    toast(e.message.includes('already')||e.message.includes('registered')?'Ese correo ya existe':'Error: '+e.message,'var(--fire)');
+  }
+  lov(false);
+}
+
 async function logout(){
   await db.auth.signOut();CU=null;CR=null;CPT=null;
   document.getElementById('screen-app').classList.remove('active');
@@ -545,11 +709,12 @@ async function crearPartido(){
   toast('✅ Partido iniciado');closeM('mo-pt');await renderContent();
 }
 
-['mo-p','mo-e','mo-j','mo-eq','mo-pt'].forEach(id=>{
+['mo-p','mo-e','mo-j','mo-eq','mo-pt','mo-su','mo-u'].forEach(id=>{
   document.getElementById(id).addEventListener('click',function(e){if(e.target===this)closeM(id)});
 });
 
 window.addEventListener('load',async()=>{
+  await checkBootstrap();
   const{data:{session}}=await db.auth.getSession();
   if(session){
     const{data:u}=await db.from('usuarios').select('*').eq('email',session.user.email).single();
@@ -559,3 +724,4 @@ window.addEventListener('load',async()=>{
 </script>
 </body>
 </html>
+
